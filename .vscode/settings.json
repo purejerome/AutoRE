@@ -1,0 +1,7 @@
+{
+    "editor.formatOnSave": false,
+    "editor.formatOnPaste": false,
+    "[python]": {
+        "editor.formatOnSave": false
+    }
+}

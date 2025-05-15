@@ -1,0 +1,11 @@
+{
+  "name": "AutoRE",
+  "description": "Auto clicker for repost exchange cause i got too lazy.",
+  "version": "1.0",
+  "manifest_version": 3,
+  "action": {
+    "default_popup": "/popup/main.html",
+    "default_icon": "/images/AutoRELogo.png"
+  },
+  "permissions": ["activeTab", "tabs"]
+}

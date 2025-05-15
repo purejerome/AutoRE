@@ -19,25 +19,29 @@ document.addEventListener("DOMContentLoaded", async () => {
 })
 
 async function handleTab(tab){
-    if(tab.url.startsWith(LOGIN_URL)){
-        let body = document.querySelector("body");
-        body.innerHTML = `
-        <div class="container">
-            <h1>Login to Repost Exchange</h1>
-            <p>To use this extension, please log in to your Repost Exchange account.</p>
-            <p>Once you are logged in, please refresh this page.</p>
-            </div>
-            `
+    console.log("hello")
+    const body = document.querySelector("body");
+    const logoutview = body.querySelector("#logoutview");
+    const loginview = body.querySelector("#loginview");
+    const fourofourview = body.querySelector("#fourofourview");
+    console.log(logoutview)
+    console.log(tab.url)
+    console.log(tab.url.startsWith(LOGIN_URL))
+    if(!tab.url.startsWith(REURL)){
+        loginview.classList.add("hidden");
+        logoutview.classList.add("hidden");
+        fourofourview.classList.remove("hidden");
     }
     else{
-        let body = document.querySelector("body");
-        body.innerHTML = `
-        <div class="container">
-            <h1>Repost Exchange</h1>
-            <p>Welcome to Repost Exchange!</p>
-            <p>To use this extension, please log in to your Repost Exchange account.</p>
-            <p>Once you are logged in, please refresh this page.</p>
-            </div>
-            `
+        if(tab.url.startsWith(LOGIN_URL)){
+            loginview.classList.add("hidden");
+            logoutview.classList.remove("hidden");
+            fourofourview.classList.add("hidden");
+        }
+        else{
+            loginview.classList.remove("hidden");
+            logoutview.classList.add("hidden");
+            fourofourview.classList.add("hidden");
+        }
     }
 }

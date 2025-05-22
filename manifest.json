@@ -7,5 +7,5 @@
     "default_popup": "/popup/main.html",
     "default_icon": "/images/AutoRELogo.png"
   },
-  "permissions": ["activeTab", "tabs"]
+  "permissions": ["activeTab", "tabs", "scripting"]
 }

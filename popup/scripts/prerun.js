@@ -19,14 +19,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 })
 
 async function handleTab(tab){
-    console.log("hello")
     const body = document.querySelector("body");
     const logoutview = body.querySelector("#logoutview");
     const loginview = body.querySelector("#loginview");
     const fourofourview = body.querySelector("#fourofourview");
-    console.log(logoutview)
-    console.log(tab.url)
-    console.log(tab.url.startsWith(LOGIN_URL))
     if(!tab.url.startsWith(REURL)){
         loginview.classList.add("hidden");
         logoutview.classList.add("hidden");

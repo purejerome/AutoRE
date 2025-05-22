@@ -23,18 +23,30 @@ async function objectFinder(findingFunction){
     return objects;
 }
 
-function checkAmount(){
+function checkAmount(button){
+    const amount = button.innerText;
+    return amount.includes("6")
+}
+
+function playSong(widget){
     
 }
 
 async function handleMainRunThrough(){
-    console.log("in")
     let reaminingReposts = 10;
+    let currentPage = 1;
+    const pagination = await objectFinder(() => {
+        let pag = document.querySelector(".pagination");
+        if(pag == null){
+            return null;
+        }
+        return pag;
+    });
     while(reaminingReposts > 0){
         const musicSections = await objectFinder(() => {
                         let mSections = document.querySelectorAll(".pd-jsxFDi");
                         if(mSections.length <= 0){
-                            mSections = null;
+                            return null;
                         }
                         return Array.from(mSections).slice(0, reaminingReposts);
                     });
@@ -42,15 +54,25 @@ async function handleMainRunThrough(){
             return "bad";
         }
         for(let i = 0; i < musicSections.length; i++){
-            const grayButton = musicSections[i].querySelector("button");
-            const amount = grayButton.innerText;
+            if(checkAmount(musicSections[i].querySelector("button"))){
+                // console.log("good")
+            }
+            const widget = musicSections[i].querySelector("iframe");
+            const fbody = widget.body
+            // console.log(fbody)
+            // console.log(widget)
         }
+        console.log("hello")
         reaminingReposts = 0
-        console.log(reaminingReposts)
     }
 }
-
+console.log("SAVE ME")
 chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+    if(message.ping === true){
+        sendResponse({ outcome: "success" });
+        return;
+    }
+    console.log(message)
     if (message.action === "startclicker") {
         const location = window.location.href;
         const campaigns = document.querySelector('a[href="/browse/campaigns/recommended"]')
@@ -69,7 +91,6 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
                 // observer.observe(document.body, { childList: true, subtree: true });
             }else{
                 sendResponse({ outcome: "error", message: "Campaigns link not found" })
-                return
             }
         }
         const outcome = await handleMainRunThrough()
@@ -78,5 +99,8 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         }else if(outcome == "bad"){
             sendResponse({ outcome: "error", message: "Error in main run through" })
         }
+        return;
     }
+    sendResponse({ outcome: "error", message: "Unknown action" });
+    return;
 });

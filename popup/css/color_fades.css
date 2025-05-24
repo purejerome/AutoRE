@@ -1,0 +1,8 @@
+@keyframes pulse {
+  0%, 100% { filter: brightness(1);   }
+  50%      { filter: brightness(1.2); }
+}
+
+.pluse-bg {
+  animation: pulse 2s linear infinite;
+}

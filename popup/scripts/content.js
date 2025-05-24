@@ -22,45 +22,13 @@ function checkAmount(button){
 async function playSong(soundCloudWidget, timeout = 1000) {
     soundCloudWidget.play()
     console.log("playing")
-    // await new Promise((resolve) => setTimeout(resolve, timeout));
     console.log("done playng")
     soundCloudWidget.pause()
 }
 
-// function waitForIframeLoad(iframe, timeout = 10000) {
-//   return new Promise(async (resolve, reject) => {
-//     if (!iframe) return reject(new Error('iframe is null'));
-    
-//     var scWidget = SC.Widget(iframe);
-//     console.log(scWidget)
-
-//     const onLoad = () => {
-//         console.log("loaded")
-//         scWidget.unbind(SC.Widget.Events.READY);
-//       clearTimeout(timer);
-//       resolve(scWidget);
-//     };
-
-//     const timer = setTimeout(() => {
-//       scWidget.unbind(SC.Widget.Events.READY);
-//       reject(new Error('iframe load timed out'));
-//     }, timeout);
-//     console.log(scWidget)
-//     // iframe.addEventListener('load', onLoad, { once: true });
-//     scWidget.bind(await SC.Widget.Events.READY, onLoad);
-//     scWidget.bind(await SC.Widget.Events.READY, () => {
-//         console.log("READY READY REAYD")
-//     });
-//     // scWidget.play()
-//     console.log("end")
-//     console.log(scWidget.isReady)
-//   });
-// }
-
 function waitForWidgetReady(iframe, timeout = 10000) {
   return new Promise((resolve, reject) => {
     if (!iframe) return reject(new Error("iframe is null"));
-    // console.log(iframe.document.querySelector("body"))
 
     let widget = SC.Widget(iframe);
     if (widget != null) {
@@ -120,7 +88,6 @@ async function modalWalkThrough(modal){
             }
         }else{
             const parent = inputs[i].parentElement.parentElement.parentElement;
-            console.log(parent)
             const plus_one_container = parent.querySelector(".col-4");
             if(plus_one_container == null){
                 inputs[i].click();
@@ -132,20 +99,18 @@ async function modalWalkThrough(modal){
             
         }
     }
-    console.log(buttons)
-    buttons[1].click()
-    
-    // const new_dialog = await objectFinder(() => {
-    //     let new_dialog = document.querySelector('div[role="dialog"]');
-    //     return new_dialog;
-    // }, 500);
-    // if(new_dialog == null){
-    //     return "bad";
-    // }
-    // console.log(new_dialog)
-    // new_dialog.click()
-    
+    buttons[1].click();
     count = 0;
+    
+    const error_toast = await objectFinder(() => {
+        let toast = document.querySelector(".Toastify__toast-container");
+        return toast;
+    }, 500);
+    
+    if(error_toast != null){
+        return "bad";
+    }
+    
     let old_modal = modal;
     while(count < 3){
         const new_modal = await objectFinder(() => {
@@ -170,14 +135,30 @@ async function modalWalkThrough(modal){
 async function handleMainRunThrough(){
     let reaminingReposts = 10;
     let currentPage = 1;
-    const pagination = await objectFinder(() => {
-        let pag = document.querySelector(".pagination");
-        return pag;
-    });
     let errorCounts = 0;
     
-    
+    console.log("in")
     while(reaminingReposts > 0){
+        const pagination = await objectFinder(() => {
+            let pag = document.querySelector(".pagination");
+            return pag;
+        }, 500);
+        
+        const pageButtons = pagination.querySelectorAll(".page-item .page-link");
+        const pageButtonsArray = Array.from(pageButtons);
+        
+        console.log(pageButtonsArray);
+        let nextButton;
+        
+        for(let i = 0; i < pageButtonsArray.length; i++){
+            if(parseInt(pageButtonsArray[i].innerText) == currentPage + 1){
+                nextButton = pageButtonsArray[i];
+                break;
+            }
+        }
+        
+        console.log(nextButton);
+        
         const musicSections = await objectFinder(() => {
                         let mSections = document.querySelectorAll(".pd-jsxFDi");
                         if(mSections.length <= 0){
@@ -209,11 +190,6 @@ async function handleMainRunThrough(){
                 frame.click()
                 for(let j = 0; j < 3; j++){
                     await playSong(soundCloudWidget);
-                    // if(j == 0){
-                    //     await playSong(soundCloudWidget);
-                    // }else{
-                    //     await playSong(soundCloudWidget, 1000);
-                    // }
                 }
                 await new Promise((resolve) => setTimeout(resolve, 7000));
                 const button = musicSections[i].querySelector("button");
@@ -222,7 +198,6 @@ async function handleMainRunThrough(){
                     errorCounts++;
                     continue;
                 }
-                console.log("clciked")
                 button.click();
                 
                 const popup_modal = await objectFinder(() => {
@@ -249,12 +224,10 @@ async function handleMainRunThrough(){
                 setColor(musicSections[i], 'red', false);
                 errorCounts++;
             }
-            // console.log("removing color")
-            // musicSections[i].style.removeProperty('background-color');
-            // musicSections[i].style.setProperty('background-color', 'green', 'important');
-            // reaminingReposts--;
         }
         reaminingReposts = 0
+        currentPage++;
+        await new Promise((resolve) => setTimeout(resolve, 2000));
     }
     return "good";
 }
@@ -265,23 +238,12 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         sendResponse({ outcome: "success" });
         return;
     }
-    console.log(message)
     if (message.action === "startclicker") {
         const location = window.location.href;
         const campaigns = document.querySelector('a[href="/browse/campaigns/recommended"]')
         if(!location.includes("/browse/campaigns/recommended")){
             if(campaigns){
                 campaigns.click()
-                    
-                // const observer = new MutationObserver((mutationsList, observer) => {
-                //     const targetContent = document.querySelectorAll(".pd-jsxFDi");
-                //     if (targetContent.length >= 11) {
-                //         observer.disconnect();
-                //         console.log("Disconnecting observer");
-                //         handleMainRunThrough()
-                //     }
-                // });
-                // observer.observe(document.body, { childList: true, subtree: true });
             }else{
                 sendResponse({ outcome: "error", message: "Campaigns link not found" })
             }

@@ -14,8 +14,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (tab.active && changeInfo.url) {
             handleTab(tab);
         }
-    })
-    
+    }) 
 })
 
 async function handleTab(tab){

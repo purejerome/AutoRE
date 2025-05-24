@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="./tailwindstarts/output.css">
   </head>
   <body>
-    <main class="w-[300px] h-[200px] bg-gray-100 px-4 flex flex-col">
+    <main class="w-[300px] h-[250px] bg-gray-100 px-4 flex flex-col">
       <div id="logoutview" class="flex flex-col justify-center h-screen">
         <h1 class="text-lg">Login to Repost Exchange</h1>
         <p>To use this extension, please log in to your Repost Exchange account.</p>
@@ -15,6 +15,27 @@
       </div>
       <div id="loginview" class="flex flex-col justify-center h-screen">
         <h1 class="text-lg">Welcome to AutoRE</h1>
+        <div class="flex flex-col">
+          <label for="follower-count">Follower Count:</label>
+          <input 
+            id="follower-count"
+            class="bg-white h-8 px-2 rounded-2xl"
+            type="number" 
+            placeholder="Enter follower count"
+            min="1"
+          >
+        </div>
+        <div class="flex flex-col">
+          <label for="repost-amount">Remaining Reposts:</label>
+          <input 
+            id="repost-amount"
+            class="bg-white h-8 px-2 rounded-2xl"
+            type="number" 
+            placeholder="Enter remaining reposts"
+            min="1"
+            max="10"
+          >
+        </div>
         <p>Click here to start the extension</p>
         <button id="start" type="button" class="bg-blue-500 text-white px-4 py-2 rounded cursor-pointer">Start</button>
       </div>

@@ -1,28 +1,22 @@
-// const start_button = document.getElementById("start")
+const followInput = document.getElementById("follower-count");
+const repostInput = document.getElementById("repost-amount");
 
-// const injected = new Set();
-
-// start_button.addEventListener("click", async () => {
-//     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-//     console.log("cliecked")
-    
-//     if (tab) {
-//         chrome.scripting.executeScript(
-//             {
-//                 target: { tabId: tab.id },
-//                 files: ["/popup/scripts/content.js"],
-//             },
-//             async () => {
-//                 await chrome.tabs.sendMessage(tab.id, { action: "startclicker" }, (response) => {
-//                     if (response && response.outcome === "success") {
-//                         console.log("good job");
-//                         console.log(response);
-//                     }
-//                 });
-//             }
-//         );
-//     }
-// })
+followInput.addEventListener("keydown", (e) => {
+    const num = parseInt(e.key, 10);
+    if(isNaN(num)) return;
+    const combinedValue = parseInt(String(followInput.value) + String(num));
+    if(combinedValue < 1){
+        e.preventDefault();
+    }
+});
+repostInput.addEventListener("keydown", (e) => {
+    const num = parseInt(e.key, 10);
+    if(isNaN(num)) return;
+    const combinedValue = parseInt(String(repostInput.value) + String(num));
+    if(combinedValue < 1 || combinedValue > 10){
+        e.preventDefault();
+    }
+});
 
 const start_button = document.getElementById("start")
 

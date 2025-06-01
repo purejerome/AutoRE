@@ -108,6 +108,7 @@ async function modalWalkThrough(modal){
     }, 500);
     
     if(error_toast != null){
+        buttons[0].click();
         return "bad";
     }
     
@@ -131,45 +132,8 @@ async function modalWalkThrough(modal){
     }
 }
 
-
-async function handleMainRunThrough(){
-    let reaminingReposts = 10;
-    let currentPage = 1;
-    let errorCounts = 0;
-    
-    console.log("in")
-    while(reaminingReposts > 0){
-        const pagination = await objectFinder(() => {
-            let pag = document.querySelector(".pagination");
-            return pag;
-        }, 500);
-        
-        const pageButtons = pagination.querySelectorAll(".page-item .page-link");
-        const pageButtonsArray = Array.from(pageButtons);
-        
-        console.log(pageButtonsArray);
-        let nextButton;
-        
-        for(let i = 0; i < pageButtonsArray.length; i++){
-            if(parseInt(pageButtonsArray[i].innerText) == currentPage + 1){
-                nextButton = pageButtonsArray[i];
-                break;
-            }
-        }
-        
-        console.log(nextButton);
-        
-        const musicSections = await objectFinder(() => {
-                        let mSections = document.querySelectorAll(".pd-jsxFDi");
-                        if(mSections.length <= 0){
-                            return null;
-                        }
-                        return Array.from(mSections).slice(0, reaminingReposts);
-                    });
-        if(musicSections == null){
-            return "bad";
-        }
-        for(let i = 0; i < musicSections.length; i++){
+async function runThroughSongs(musicSections, reaminingReposts, errorCounts){
+    for(let i = 0; i < musicSections.length && errorCounts < 6; i++){
             setColor(musicSections[i], 'orange', true);
             if(!checkAmount(musicSections[i].querySelector("button"))){
                 musicSections[i].style.removeProperty('background-color');
@@ -211,7 +175,7 @@ async function handleMainRunThrough(){
                     continue;
                 }
                 
-                if(modalWalkThrough(popup_modal) == "bad"){
+                if(await modalWalkThrough(popup_modal) == "bad"){
                     setColor(musicSections[i], 'red', false);
                     errorCounts++;
                     continue;
@@ -219,12 +183,128 @@ async function handleMainRunThrough(){
                 
                 setColor(musicSections[i], 'green', false);
                 reaminingReposts--;
-                return "bad"
+                reaminingReposts = 0
             }catch(e){
                 setColor(musicSections[i], 'red', false);
                 errorCounts++;
             }
         }
+        console.log("made it")
+        return {reaminingReposts, errorCounts}
+}
+
+function xy(x, y) {
+    x ++;
+    y ++;
+    return { x, y };
+}
+
+
+async function handleMainRunThrough(){
+    let reaminingReposts = 10;
+    let currentPage = 1;
+    let errorCounts = 0;
+    
+    console.log("in")
+    while(reaminingReposts > 0){
+        const pagination = await objectFinder(() => {
+            let pag = document.querySelector(".pagination");
+            return pag;
+        }, 500);
+        
+        const pageButtons = pagination.querySelectorAll(".page-item .page-link");
+        const pageButtonsArray = Array.from(pageButtons);
+        
+        let nextButton;
+        
+        for(let i = 0; i < pageButtonsArray.length; i++){
+            if(parseInt(pageButtonsArray[i].innerText) == currentPage + 1){
+                nextButton = pageButtonsArray[i];
+                break;
+            }
+        }
+        
+        
+        const musicSections = await objectFinder(() => {
+                        let mSections = document.querySelectorAll(".pd-jsxFDi");
+                        if(mSections.length <= 0){
+                            return null;
+                        }
+                        return Array.from(mSections).slice(0, reaminingReposts);
+                    });
+        if(musicSections == null){
+            return "bad";
+        }
+        let x = 0;
+        let y = 0;
+        ({ x, y } = xy(x, y));
+        // x = x2;
+        // y = y2;
+        console.log("x: ", x, " y: ", y);
+        ({ x, y } = xy(x, y));
+        console.log("x: ", x, " y: ", y);
+        
+        ({reaminingReposts, errorCounts} = await runThroughSongs(musicSections, reaminingReposts, errorCounts));
+        // reaminingReposts = reaminingRepostsRet;
+        // errorCounts = errorCountsRet;
+        console.log("reaminingReposts: ", reaminingReposts);
+        console.log("errorCounts: ", errorCounts);
+        // for(let i = 0; i < musicSections.length; i++){
+        //     setColor(musicSections[i], 'orange', true);
+        //     if(!checkAmount(musicSections[i].querySelector("button"))){
+        //         musicSections[i].style.removeProperty('background-color');
+        //         musicSections[i].classList.remove("pluse-bg");
+        //         musicSections[i].style.setProperty('background-color', 'red', 'important');
+        //         continue;
+        //     }
+        //     const bounds = musicSections[i].getBoundingClientRect()
+        //     window.scrollTo(0, bounds.top + window.scrollY - 100);
+        //     const frame = await objectFinder(() => {
+        //         let f = musicSections[i].querySelector("iframe");
+        //         return f;
+        //     })
+        //     try{
+        //         var soundCloudWidget = await waitForWidgetReady(frame)
+        //         frame.click()
+        //         frame.click()
+        //         frame.click()
+        //         for(let j = 0; j < 3; j++){
+        //             await playSong(soundCloudWidget);
+        //         }
+        //         await new Promise((resolve) => setTimeout(resolve, 7000));
+        //         const button = musicSections[i].querySelector("button");
+        //         if(button.disabled){
+        //             setColor(musicSections[i], 'red', false);
+        //             errorCounts++;
+        //             continue;
+        //         }
+        //         button.click();
+                
+        //         const popup_modal = await objectFinder(() => {
+        //             let pop = document.querySelector(".modal-content");
+        //             return pop;
+        //         });
+                
+        //         if(popup_modal == null){
+        //             setColor(musicSections[i], 'red', false);
+        //             errorCounts++;
+        //             continue;
+        //         }
+                
+        //         if(modalWalkThrough(popup_modal) == "bad"){
+        //             setColor(musicSections[i], 'red', false);
+        //             errorCounts++;
+        //             continue;
+        //         }
+                
+        //         setColor(musicSections[i], 'green', false);
+        //         reaminingReposts--;
+        //         return "bad"
+        //     }catch(e){
+        //         setColor(musicSections[i], 'red', false);
+        //         errorCounts++;
+        //     }
+        // }
         reaminingReposts = 0
         currentPage++;
         await new Promise((resolve) => setTimeout(resolve, 2000));

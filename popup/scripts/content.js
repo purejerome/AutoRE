@@ -69,6 +69,7 @@ async function modalWalkThrough(modal){
         return Array.from(buttonElements);
     }, 500);
     if(buttons == null){
+        console.log("no buttons found");
         return "bad";
     }
     const inputs = await objectFinder(() => {
@@ -79,6 +80,7 @@ async function modalWalkThrough(modal){
         return Array.from(inputElements);
     }, 500);
     if(inputs == null){
+        console.log("no inputs found");
         return "bad";
     }
     for(let i = 0; i < inputs.length; i++){
@@ -103,12 +105,17 @@ async function modalWalkThrough(modal){
     count = 0;
     
     const error_toast = await objectFinder(() => {
-        let toast = document.querySelector(".Toastify__toast-container");
+        let toast = document.querySelector(".Toastify__toast--error");
         return toast;
     }, 500);
     
     if(error_toast != null){
         buttons[0].click();
+        console.log(error_toast.innerText)
+        console.log("error toast found");
+        if(error_toast.innerText.includes("You have reached your 12-hour repost limit.")){
+            return "super_bad";
+        }
         return "bad";
     }
     
@@ -122,6 +129,7 @@ async function modalWalkThrough(modal){
             return new_modal;
         }, 500);
         if(new_modal == null){
+            console.log("no new modal found");
             return "bad";
         }
         
@@ -138,7 +146,7 @@ async function runThroughSongs(musicSections, reaminingReposts, errorCounts){
             if(!checkAmount(musicSections[i].querySelector("button"))){
                 musicSections[i].style.removeProperty('background-color');
                 musicSections[i].classList.remove("pluse-bg");
-                musicSections[i].style.setProperty('background-color', 'red', 'important');
+                musicSections[i].style.setProperty('background-color', 'gray', 'important');
                 continue;
             }
             const bounds = musicSections[i].getBoundingClientRect()
@@ -155,7 +163,12 @@ async function runThroughSongs(musicSections, reaminingReposts, errorCounts){
                 for(let j = 0; j < 3; j++){
                     await playSong(soundCloudWidget);
                 }
+                const pauseButton = await objectFinder(() => {
+                    let pause = document.querySelector("img[alt='Pause']");
+                    return pause;
+                }, 500);
                 await new Promise((resolve) => setTimeout(resolve, 7000));
+                pauseButton.click();
                 const button = musicSections[i].querySelector("button");
                 if(button.disabled){
                     setColor(musicSections[i], 'red', false);
@@ -170,59 +183,78 @@ async function runThroughSongs(musicSections, reaminingReposts, errorCounts){
                 });
                 
                 if(popup_modal == null){
+                    console.log("no popup modal")
                     setColor(musicSections[i], 'red', false);
                     errorCounts++;
                     continue;
                 }
                 
-                if(await modalWalkThrough(popup_modal) == "bad"){
+                const modalWalkResult = await modalWalkThrough(popup_modal);
+                if(modalWalkResult == "bad"){
+                    console.log("bad modal walkthrough")
                     setColor(musicSections[i], 'red', false);
                     errorCounts++;
+                    continue;
+                } else if(modalWalkResult == "super_bad"){
+                    console.log("super bad modal walkthrough")
+                    setColor(musicSections[i], 'red', false);
+                    reaminingReposts = 0;
+                    errorCounts = 6;
                     continue;
                 }
                 
                 setColor(musicSections[i], 'green', false);
                 reaminingReposts--;
-                reaminingReposts = 0
             }catch(e){
+                console.log("no frame?")
                 setColor(musicSections[i], 'red', false);
                 errorCounts++;
             }
+            await new Promise((resolve) => setTimeout(resolve, 3500));
         }
-        console.log("made it")
         return {reaminingReposts, errorCounts}
 }
 
-function xy(x, y) {
-    x ++;
-    y ++;
-    return { x, y };
+async function findNextButton(currentPage){
+    let nextButton = null;
+    const pagination = await objectFinder(() => {
+        let pag = document.querySelector(".pagination");
+        return pag;
+    }, 500);
+    
+    const pageButtons = pagination.querySelectorAll(".page-item .page-link");
+    const pageButtonsArray = Array.from(pageButtons);
+    
+    if(currentPage == 1){
+        const activePage = pagination.querySelector(".page-item.active .page-link");
+        if(activePage.innerText != "1"){
+            pageButtonsArray[1].click();
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+        }
+    }
+    
+    for(let i = 0; i < pageButtonsArray.length; i++){
+        if(parseInt(pageButtonsArray[i].innerText) == currentPage + 1){
+            nextButton = pageButtonsArray[i];
+            break;
+        }
+    }
+    return nextButton;
 }
 
-
-async function handleMainRunThrough(){
+async function handleRunThrough(isCampaign = true){
     let reaminingReposts = 10;
     let currentPage = 1;
     let errorCounts = 0;
     
     console.log("in")
-    while(reaminingReposts > 0){
-        const pagination = await objectFinder(() => {
-            let pag = document.querySelector(".pagination");
-            return pag;
-        }, 500);
+    while(reaminingReposts > 0 && errorCounts < 6){
+        let nextButton = null;
         
-        const pageButtons = pagination.querySelectorAll(".page-item .page-link");
-        const pageButtonsArray = Array.from(pageButtons);
-        
-        let nextButton;
-        
-        for(let i = 0; i < pageButtonsArray.length; i++){
-            if(parseInt(pageButtonsArray[i].innerText) == currentPage + 1){
-                nextButton = pageButtonsArray[i];
-                break;
-            }
+        if(isCampaign){
+            nextButton = await findNextButton(currentPage);
         }
+        
         
         
         const musicSections = await objectFinder(() => {
@@ -235,79 +267,25 @@ async function handleMainRunThrough(){
         if(musicSections == null){
             return "bad";
         }
-        let x = 0;
-        let y = 0;
-        ({ x, y } = xy(x, y));
-        // x = x2;
-        // y = y2;
-        console.log("x: ", x, " y: ", y);
-        ({ x, y } = xy(x, y));
-        console.log("x: ", x, " y: ", y);
         
         ({reaminingReposts, errorCounts} = await runThroughSongs(musicSections, reaminingReposts, errorCounts));
-        // reaminingReposts = reaminingRepostsRet;
-        // errorCounts = errorCountsRet;
         console.log("reaminingReposts: ", reaminingReposts);
         console.log("errorCounts: ", errorCounts);
-        // for(let i = 0; i < musicSections.length; i++){
-        //     setColor(musicSections[i], 'orange', true);
-        //     if(!checkAmount(musicSections[i].querySelector("button"))){
-        //         musicSections[i].style.removeProperty('background-color');
-        //         musicSections[i].classList.remove("pluse-bg");
-        //         musicSections[i].style.setProperty('background-color', 'red', 'important');
-        //         continue;
-        //     }
-        //     const bounds = musicSections[i].getBoundingClientRect()
-        //     window.scrollTo(0, bounds.top + window.scrollY - 100);
-        //     const frame = await objectFinder(() => {
-        //         let f = musicSections[i].querySelector("iframe");
-        //         return f;
-        //     })
-        //     try{
-        //         var soundCloudWidget = await waitForWidgetReady(frame)
-        //         frame.click()
-        //         frame.click()
-        //         frame.click()
-        //         for(let j = 0; j < 3; j++){
-        //             await playSong(soundCloudWidget);
-        //         }
-        //         await new Promise((resolve) => setTimeout(resolve, 7000));
-        //         const button = musicSections[i].querySelector("button");
-        //         if(button.disabled){
-        //             setColor(musicSections[i], 'red', false);
-        //             errorCounts++;
-        //             continue;
-        //         }
-        //         button.click();
-                
-        //         const popup_modal = await objectFinder(() => {
-        //             let pop = document.querySelector(".modal-content");
-        //             return pop;
-        //         });
-                
-        //         if(popup_modal == null){
-        //             setColor(musicSections[i], 'red', false);
-        //             errorCounts++;
-        //             continue;
-        //         }
-                
-        //         if(modalWalkThrough(popup_modal) == "bad"){
-        //             setColor(musicSections[i], 'red', false);
-        //             errorCounts++;
-        //             continue;
-        //         }
-                
-        //         setColor(musicSections[i], 'green', false);
-        //         reaminingReposts--;
-        //         return "bad"
-        //     }catch(e){
-        //         setColor(musicSections[i], 'red', false);
-        //         errorCounts++;
-        //     }
-        // }
-        reaminingReposts = 0
-        currentPage++;
-        await new Promise((resolve) => setTimeout(resolve, 2000));
+        if(isCampaign && reaminingReposts > 0 && errorCounts < 6){
+            currentPage++;
+            if(reaminingReposts > 0 && nextButton != null){
+                nextButton.click();
+                await new Promise((resolve) => setTimeout(resolve, 2000));
+            } else if(reaminingReposts > 0 && nextButton == null){
+                return "bad";
+            }
+        } else if(!isCampaign){
+            if(errorCounts >= 6){
+                return "bad";
+            }else{
+                break;
+            }
+        }
     }
     return "good";
 }
@@ -319,6 +297,9 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
         return;
     }
     if (message.action === "startclicker") {
+        window.alert = function() {};
+        window.confirm = function() { return true; };
+        window.prompt = function() { return null; };
         const location = window.location.href;
         const campaigns = document.querySelector('a[href="/browse/campaigns/recommended"]')
         if(!location.includes("/browse/campaigns/recommended")){
@@ -326,14 +307,42 @@ chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
                 campaigns.click()
             }else{
                 sendResponse({ outcome: "error", message: "Campaigns link not found" })
+                return;
             }
         }
-        const outcome = await handleMainRunThrough()
-        if(outcome == "good"){
-            sendResponse({ outcome: "success" });
-        }else if(outcome == "bad"){
-            sendResponse({ outcome: "error", message: "Error in main run through" })
-        }
+        const outcomeCampaign = await handleRunThrough()
+        // if(outcome == "good"){
+        //     sendResponse({ outcome: "success" });
+        // }
+        // if(outcomeCampaign == "bad"){
+        //     sendResponse({ outcome: "error", message: "Error in main run through" })
+        //     return;
+        // }
+        const request = document.querySelector('a[href="/me/repost-requests/requested"]')
+        const spans = request.querySelectorAll("span");
+        request.click();
+            await new Promise((resolve) => setTimeout(resolve, 2000));
+            console.log("spans: ", spans);
+            console.log("innnnnnn")
+            const repostOutcome = await handleRunThrough(false);
+            if(repostOutcome == "bad"){
+                sendResponse({ outcome: "error", message: "Error in repost run through" })
+                return;
+            }
+        // if(spans.length <= 1){
+        //     console.log("no reposts")
+        // }else{
+        //     request.click();
+        //     await new Promise((resolve) => setTimeout(resolve, 2000));
+        //     console.log("spans: ", spans);
+        //     console.log("innnnnnn")
+        //     const repostOutcome = await handleRunThrough(false);
+        //     if(repostOutcome == "bad"){
+        //         sendResponse({ outcome: "error", message: "Error in repost run through" })
+        //         return;
+        //     }
+        // }
+        sendResponse({ outcome: "success" });
         return;
     }
     sendResponse({ outcome: "error", message: "Unknown action" });

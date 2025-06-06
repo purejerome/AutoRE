@@ -306,16 +306,30 @@ async function handleRunThrough(isCampaign = true, reposts, repostValue){
     }
     return "good";
 }
+let count = 0
+let requestCount = 0;
 
 function updateSplashText(totalReposts){
     const splashText = `${count} out of ${totalReposts} reposts successfully handled.`;
+    chrome.runtime.sendMessage({action: "progress", done: count});
     chrome.runtime.sendMessage({action: "updateSplashText", text: splashText});
 }
 
-let count = 0
+function updateSplashTextRequests(totalRepostsRequests){
+    const splashText = `${requestCount} out of ${totalRepostsRequests} requests successfully handled.`;
+    chrome.runtime.sendMessage({action: "progressRequests", doneRequests: requestCount});
+    chrome.runtime.sendMessage({action: "updateSplashText", text: splashText});
+}
+
 function countUpTest(){
     const splashText = `${count} out of 10 reposts successfully handled.`;
     chrome.runtime.sendMessage({action: "progress", done: count});
+    chrome.runtime.sendMessage({action: "updateSplashText", text: splashText});
+}
+
+function countUpTestRequests(){
+    const splashText = `${requestCount} out of 10 requests successfully handled.`;
+    chrome.runtime.sendMessage({action: "progressRequests", doneRequests: requestCount});
     chrome.runtime.sendMessage({action: "updateSplashText", text: splashText});
 }
 
@@ -336,6 +350,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             await countUpTest(message.reposts);
             await new Promise((resolve) => setTimeout(resolve, 1000));
             count++;
+        }
+        for (let i = 0; i < 10; i++) {
+            await countUpTestRequests(10);
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            requestCount++;
         }
         chrome.runtime.sendMessage({action: "finish"});
         sendResponse({ outcome: 'success' });   // delivered!

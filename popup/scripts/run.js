@@ -100,6 +100,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (request.action === 'updateSplashText') {
             splash_text.innerText = request.text;
         }
-        return true;
+        return;
     }
 );

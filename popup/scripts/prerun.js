@@ -1,6 +1,13 @@
 const REURL = "https://repostexchange.com/";
 const LOGIN_URL = "https://repostexchange.com/welcome";
 
+const body = document.querySelector("body");
+const logoutview = body.querySelector("#logoutview");
+const loginview = body.querySelector("#loginview");
+const fourofourview = body.querySelector("#fourofourview");
+const loadingview2 = body.querySelector("#loadingview");
+const splash_text2 = loadingview2.querySelector("#splash-text");
+
 
 document.addEventListener("DOMContentLoaded", async () => {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -18,13 +25,27 @@ document.addEventListener("DOMContentLoaded", async () => {
 })
 
 async function handleTab(tab){
-    const body = document.querySelector("body");
-    const logoutview = body.querySelector("#logoutview");
-    const loginview = body.querySelector("#loginview");
-    const fourofourview = body.querySelector("#fourofourview");
+    const { running, done, total } = await chrome.runtime.sendMessage({ action: "getState" });
+    if(running){
+        loginview.classList.add("hidden");
+        logoutview.classList.add("hidden");
+        fourofourview.classList.add("hidden");
+        loadingview2.classList.remove("hidden");
+        if(done !== undefined && total !== undefined){
+            console.log("Updating splash text:", done, total);
+            splash_text2.innerText = `${done} out of ${total} reposts successfully handled.`;
+        }
+        else{
+            console.log("Updating splash text: Loading...");
+            splash_text2.innerText = "Loading...";
+        }
+        return;
+    }
+    
     if(!tab.url.startsWith(REURL)){
         loginview.classList.add("hidden");
         logoutview.classList.add("hidden");
+        loadingview2.classList.add("hidden");
         fourofourview.classList.remove("hidden");
     }
     else{
@@ -32,11 +53,13 @@ async function handleTab(tab){
             loginview.classList.add("hidden");
             logoutview.classList.remove("hidden");
             fourofourview.classList.add("hidden");
+            loadingview2.classList.add("hidden");
         }
         else{
             loginview.classList.remove("hidden");
             logoutview.classList.add("hidden");
             fourofourview.classList.add("hidden");
+            loadingview2.classList.add("hidden");
         }
     }
 }

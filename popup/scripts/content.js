@@ -14,15 +14,13 @@ async function objectFinder(findingFunction, timeout = 1000) {
     return objects;
 }
 
-function checkAmount(button){
+function checkAmount(button, repostValue){
     const amount = button.innerText;
-    return amount.includes("6")
+    return amount.includes(`${repostValue}`)
 }
 
 async function playSong(soundCloudWidget, timeout = 1000) {
     soundCloudWidget.play()
-    console.log("playing")
-    console.log("done playng")
     soundCloudWidget.pause()
 }
 
@@ -128,25 +126,33 @@ async function modalWalkThrough(modal){
             }
             return new_modal;
         }, 500);
-        if(new_modal == null){
+        if(new_modal == null && count < 2){
             console.log("no new modal found");
             return "bad";
         }
         
-        const close_button = new_modal.querySelector("button");
-        close_button.click();
-        old_modal = new_modal;
+        if(new_modal != null){
+            const close_button = new_modal.querySelector("button");
+            close_button.click();
+            old_modal = new_modal;
+        }
         count++;
     }
 }
 
-async function runThroughSongs(musicSections, reaminingReposts, errorCounts){
+async function runThroughSongs(musicSections, reaminingReposts, 
+    errorCounts, repostValue, totalReposts){
+    let valueError = 0;
     for(let i = 0; i < musicSections.length && errorCounts < 6; i++){
             setColor(musicSections[i], 'orange', true);
-            if(!checkAmount(musicSections[i].querySelector("button"))){
+            if(!checkAmount(musicSections[i].querySelector("button"), repostValue)){
                 musicSections[i].style.removeProperty('background-color');
                 musicSections[i].classList.remove("pluse-bg");
                 musicSections[i].style.setProperty('background-color', 'gray', 'important');
+                valueError++;
+                if(valueError >= 5){
+                    errorCounts = 6;
+                }
                 continue;
             }
             const bounds = musicSections[i].getBoundingClientRect()
@@ -172,6 +178,7 @@ async function runThroughSongs(musicSections, reaminingReposts, errorCounts){
                 const button = musicSections[i].querySelector("button");
                 if(button.disabled){
                     setColor(musicSections[i], 'red', false);
+                    console.log("button disabled")
                     errorCounts++;
                     continue;
                 }
@@ -185,6 +192,7 @@ async function runThroughSongs(musicSections, reaminingReposts, errorCounts){
                 if(popup_modal == null){
                     console.log("no popup modal")
                     setColor(musicSections[i], 'red', false);
+                    console.log("no popup modal")
                     errorCounts++;
                     continue;
                 }
@@ -205,6 +213,8 @@ async function runThroughSongs(musicSections, reaminingReposts, errorCounts){
                 
                 setColor(musicSections[i], 'green', false);
                 reaminingReposts--;
+                totalReposts++;
+                updateSplashText(totalReposts);
             }catch(e){
                 console.log("no frame?")
                 setColor(musicSections[i], 'red', false);
@@ -212,7 +222,7 @@ async function runThroughSongs(musicSections, reaminingReposts, errorCounts){
             }
             await new Promise((resolve) => setTimeout(resolve, 3500));
         }
-        return {reaminingReposts, errorCounts}
+        return {reaminingReposts, errorCounts, totalReposts}
 }
 
 async function findNextButton(currentPage){
@@ -242,10 +252,11 @@ async function findNextButton(currentPage){
     return nextButton;
 }
 
-async function handleRunThrough(isCampaign = true){
-    let reaminingReposts = 10;
+async function handleRunThrough(isCampaign = true, reposts, repostValue){
+    let reaminingReposts = reposts;
     let currentPage = 1;
     let errorCounts = 0;
+    let totalReposts = 0;
     
     console.log("in")
     while(reaminingReposts > 0 && errorCounts < 6){
@@ -262,16 +273,22 @@ async function handleRunThrough(isCampaign = true){
                         if(mSections.length <= 0){
                             return null;
                         }
-                        return Array.from(mSections).slice(0, reaminingReposts);
+                        if(isCampaign){
+                            return Array.from(mSections).slice(0, reaminingReposts);
+                        }else{
+                            return Array.from(mSections);
+                        }
                     });
         if(musicSections == null){
             return "bad";
         }
         
-        ({reaminingReposts, errorCounts} = await runThroughSongs(musicSections, reaminingReposts, errorCounts));
+        ({reaminingReposts, errorCounts, totalReposts} = await runThroughSongs(musicSections, reaminingReposts, errorCounts, 
+            repostValue, totalReposts));
         console.log("reaminingReposts: ", reaminingReposts);
         console.log("errorCounts: ", errorCounts);
         if(isCampaign && reaminingReposts > 0 && errorCounts < 6){
+            console.log("going next page")
             currentPage++;
             if(reaminingReposts > 0 && nextButton != null){
                 nextButton.click();
@@ -290,61 +307,76 @@ async function handleRunThrough(isCampaign = true){
     return "good";
 }
 
+function updateSplashText(totalReposts){
+    const splashText = `${count} out of ${totalReposts} reposts successfully handled.`;
+    chrome.runtime.sendMessage({action: "updateSplashText", text: splashText});
+}
 
-chrome.runtime.onMessage.addListener(async (message, sender, sendResponse) => {
+let count = 0
+function countUpTest(){
+    const splashText = `${count} out of 10 reposts successfully handled.`;
+    chrome.runtime.sendMessage({action: "progress", done: count});
+    chrome.runtime.sendMessage({action: "updateSplashText", text: splashText});
+}
+
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if(message.ping === true){
         sendResponse({ outcome: "success" });
+        console.log("Ping received from popup");
+        console.log(message, sender, sendResponse)
         return;
     }
     if (message.action === "startclicker") {
-        window.alert = function() {};
-        window.confirm = function() { return true; };
-        window.prompt = function() { return null; };
-        const location = window.location.href;
-        const campaigns = document.querySelector('a[href="/browse/campaigns/recommended"]')
-        if(!location.includes("/browse/campaigns/recommended")){
-            if(campaigns){
-                campaigns.click()
-            }else{
-                sendResponse({ outcome: "error", message: "Campaigns link not found" })
-                return;
-            }
+        console.log("startclicker action received");
+        chrome.runtime.sendMessage({action: "start", total: message.reposts});
+        chrome.runtime.sendMessage({action: "running"});
+        (async () => {
+        for (let i = 0; i < 10; i++) {
+            await countUpTest(message.reposts);
+            await new Promise((resolve) => setTimeout(resolve, 1000));
+            count++;
         }
-        const outcomeCampaign = await handleRunThrough()
-        // if(outcome == "good"){
-        //     sendResponse({ outcome: "success" });
-        // }
-        // if(outcomeCampaign == "bad"){
-        //     sendResponse({ outcome: "error", message: "Error in main run through" })
-        //     return;
-        // }
-        const request = document.querySelector('a[href="/me/repost-requests/requested"]')
-        const spans = request.querySelectorAll("span");
-        request.click();
-            await new Promise((resolve) => setTimeout(resolve, 2000));
-            console.log("spans: ", spans);
-            console.log("innnnnnn")
-            const repostOutcome = await handleRunThrough(false);
-            if(repostOutcome == "bad"){
-                sendResponse({ outcome: "error", message: "Error in repost run through" })
-                return;
-            }
-        // if(spans.length <= 1){
-        //     console.log("no reposts")
-        // }else{
-        //     request.click();
-        //     await new Promise((resolve) => setTimeout(resolve, 2000));
-        //     console.log("spans: ", spans);
-        //     console.log("innnnnnn")
-        //     const repostOutcome = await handleRunThrough(false);
-        //     if(repostOutcome == "bad"){
-        //         sendResponse({ outcome: "error", message: "Error in repost run through" })
-        //         return;
+        chrome.runtime.sendMessage({action: "finish"});
+        sendResponse({ outcome: 'success' });   // delivered!
+        })();
+        // (async () => {
+        //     const respostValue = message.respostValue;
+        //     const reposts = message.reposts;
+        //     const location = window.location.href;
+        //     const campaigns = document.querySelector('a[href="/browse/campaigns/recommended"]')
+        //     if(!location.includes("/browse/campaigns/recommended")){
+        //         if(campaigns){
+        //             campaigns.click()
+        //         }else{
+        //             sendResponse({ outcome: "error", message: "Campaigns link not found" })
+        //             return
+        //         }
         //     }
-        // }
-        sendResponse({ outcome: "success" });
-        return;
+        //     const outcomeCampaign = await handleRunThrough(true, reposts, respostValue);
+        //     if(outcomeCampaign == "bad"){
+        //         sendResponse({ outcome: "error", message: "Error in main run through" })
+        //         return
+        //     }
+        //     const request = document.querySelector('a[href="/me/repost-requests/requested"]')
+        //     const spans = request.querySelectorAll("span");
+        //     if(spans.length <= 1){
+        //         console.log("no reposts")
+        //     }else{
+        //         request.click();
+        //         await new Promise((resolve) => setTimeout(resolve, 2000));
+        //         console.log("spans: ", spans);
+        //         console.log("innnnnnn")
+        //         const repostsRequests = parseInt(spans[1].innerText);
+        //         const requestOutcome = await handleRunThrough(false, repostsRequests, respostValue);
+        //         if(requestOutcome == "bad"){
+        //             sendResponse({ outcome: "error", message: "Error in repost run through" })
+        //             return
+        //         }
+        //     }
+        //     sendResponse({ outcome: "success" });
+        //     return
+        // })();
+        return true;
     }
-    sendResponse({ outcome: "error", message: "Unknown action" });
-    return;
 });

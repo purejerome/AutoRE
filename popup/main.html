@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AutoRE</title>
     <link rel="stylesheet" href="./tailwindstarts/output.css">
+    <link rel="stylesheet" href="./css/main.css">
   </head>
   <body>
     <main class="w-[300px] h-[250px] bg-gray-100 px-4 flex flex-col">
@@ -32,16 +33,35 @@
             class="bg-white h-8 px-2 rounded-2xl"
             type="number" 
             placeholder="Enter remaining reposts"
-            min="1"
+            min="0"
             max="10"
           >
         </div>
         <p>Click here to start the extension</p>
-        <button id="start" type="button" class="bg-blue-500 text-white px-4 py-2 rounded cursor-pointer">Start</button>
+        <button 
+          disabled 
+          id="start" 
+          type="button" 
+          class="bg-blue-500 text-white px-4 py-2 rounded cursor-pointer 
+          disabled:cursor-not-allowed disabled:bg-gray-400"
+        >
+          Start
+        </button>
       </div>
       <div id="fourofourview" class="flex flex-col justify-center h-screen">
         <h1 class="text-lg">This is not the Repost Exchange page.</h1>
         <p>Please navigate to the repost exchange page to get this to function.</p>
+      </div>
+      <div id="loadingview" class="flex flex-col justify-center items-center h-screen hidden">
+        <p id="splash-text"></p>
+        <span class="loader"></span>
+        <button 
+          id="cancel" 
+          type="button" 
+          class="bg-red-500 text-white px-4 py-2 rounded cursor-pointer mt-4"
+        >
+        Cancel
+        </button>
       </div>
     </main>
     <script src="scripts/prerun.js"></script>

@@ -1,9 +1,11 @@
 const followInput = document.getElementById("follower-count");
 const repostInput = document.getElementById("repost-amount");
 const start_button = document.getElementById("start");
+const cancel_button = document.getElementById("cancel");
 const splash_text = document.getElementById("splash-text");
 const loadingview = body.querySelector("#loadingview");
 const loginviewRun = body.querySelector("#loginview");
+let tabID = null;
 
 function toggleButtonState(){
     const buttonState = followInput.value.trim() && repostInput.value.trim();
@@ -35,6 +37,8 @@ const injected = new Set();
 start_button.addEventListener('click',  async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   if (!tab) return;
+  
+  tabID = tab.id;
   
   const followers = parseInt(followInput.value, 10);
   const repostsRemaining = parseInt(repostInput.value, 10);
@@ -69,6 +73,11 @@ start_button.addEventListener('click',  async () => {
   }catch{
     console.error("Error sending startclicker message:", chrome.runtime.lastError);
   }
+});
+
+cancel_button.addEventListener('click', async () => {
+    chrome.tabs.reload(tabID, { bypassCache: true });
+    await chrome.tabs.sendMessage({ action: 'finish' });
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {

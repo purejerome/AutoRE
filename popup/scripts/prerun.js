@@ -33,15 +33,12 @@ async function handleTab(tab){
         fourofourview.classList.add("hidden");
         loadingview2.classList.remove("hidden");
         if(doneRequests !== undefined && totalRequests !== undefined){
-            console.log("Updating splash text:", doneRequests, totalRequests);
             splash_text2.innerText = `${doneRequests} out of ${totalRequests} requests successfully handled.`;
         }
         else if(done !== undefined && total !== undefined){
-            console.log("Updating splash text:", done, total);
             splash_text2.innerText = `${done} out of ${total} reposts successfully handled.`;
         }
         else{
-            console.log("Updating splash text: Loading...");
             splash_text2.innerText = "Loading...";
         }
         return;

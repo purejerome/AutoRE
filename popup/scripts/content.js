@@ -141,7 +141,7 @@ async function modalWalkThrough(modal){
 }
 
 async function runThroughSongs(musicSections, reaminingReposts, 
-    errorCounts, repostValue, totalReposts){
+    errorCounts, repostValue, totalReposts, isCampaign = true, startingReposts){
     let valueError = 0;
     for(let i = 0; i < musicSections.length && errorCounts < 6; i++){
             setColor(musicSections[i], 'orange', true);
@@ -214,7 +214,11 @@ async function runThroughSongs(musicSections, reaminingReposts,
                 setColor(musicSections[i], 'green', false);
                 reaminingReposts--;
                 totalReposts++;
-                updateSplashText(totalReposts);
+                if(isCampaign){
+                    updateSplashText(totalReposts, startingReposts);
+                }else{
+                    updateSplashTextRequests(totalReposts, startingReposts);
+                }
             }catch(e){
                 console.log("no frame?")
                 setColor(musicSections[i], 'red', false);
@@ -284,7 +288,7 @@ async function handleRunThrough(isCampaign = true, reposts, repostValue){
         }
         
         ({reaminingReposts, errorCounts, totalReposts} = await runThroughSongs(musicSections, reaminingReposts, errorCounts, 
-            repostValue, totalReposts));
+            repostValue, totalReposts, isCampaign, startingReposts));
         console.log("reaminingReposts: ", reaminingReposts);
         console.log("errorCounts: ", errorCounts);
         if(isCampaign && reaminingReposts > 0 && errorCounts < 6){
@@ -309,13 +313,13 @@ async function handleRunThrough(isCampaign = true, reposts, repostValue){
 let count = 0
 let requestCount = 0;
 
-function updateSplashText(totalReposts){
+function updateSplashText(count, totalReposts){
     const splashText = `${count} out of ${totalReposts} reposts successfully handled.`;
     chrome.runtime.sendMessage({action: "progress", done: count});
     chrome.runtime.sendMessage({action: "updateSplashText", text: splashText});
 }
 
-function updateSplashTextRequests(totalRepostsRequests){
+function updateSplashTextRequests(requestCount, totalRepostsRequests){
     const splashText = `${requestCount} out of ${totalRepostsRequests} requests successfully handled.`;
     chrome.runtime.sendMessage({action: "progressRequests", doneRequests: requestCount});
     chrome.runtime.sendMessage({action: "updateSplashText", text: splashText});
@@ -344,7 +348,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "startclicker") {
         console.log("startclicker action received");
         chrome.runtime.sendMessage({action: "start", total: message.reposts});
-        chrome.runtime.sendMessage({action: "running"});
+        // chrome.runtime.sendMessage({action: "running"});
         (async () => {
         for (let i = 0; i < 10; i++) {
             await countUpTest(message.reposts);
@@ -368,12 +372,16 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         //         if(campaigns){
         //             campaigns.click()
         //         }else{
+        //             chrome.runtime.sendMessage({action: "finish"});
         //             sendResponse({ outcome: "error", message: "Campaigns link not found" })
         //             return
         //         }
         //     }
+        //     chrome.runtime.sendMessage({action: "start", total: reposts});
+        //     chrome.runtime.sendMessage({action: "running"});
         //     const outcomeCampaign = await handleRunThrough(true, reposts, respostValue);
         //     if(outcomeCampaign == "bad"){
+        //         chrome.runtime.sendMessage({action: "finish"});
         //         sendResponse({ outcome: "error", message: "Error in main run through" })
         //         return
         //     }
@@ -387,12 +395,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         //         console.log("spans: ", spans);
         //         console.log("innnnnnn")
         //         const repostsRequests = parseInt(spans[1].innerText);
+        //         chrome.runtime.sendMessage({action: "startRequests", totalRequests: repostsRequests});
         //         const requestOutcome = await handleRunThrough(false, repostsRequests, respostValue);
         //         if(requestOutcome == "bad"){
+        //             chrome.runtime.sendMessage({action: "finish"});
         //             sendResponse({ outcome: "error", message: "Error in repost run through" })
         //             return
         //         }
         //     }
+        //     chrome.runtime.sendMessage({action: "finish"});
         //     sendResponse({ outcome: "success" });
         //     return
         // })();

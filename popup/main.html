@@ -4,45 +4,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AutoRE</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="./tailwindstarts/output.css">
     <link rel="stylesheet" href="./css/main.css">
   </head>
   <body>
-    <main class="w-[300px] h-[250px] bg-gray-100 px-4 flex flex-col">
-      <div id="logoutview" class="flex flex-col justify-center h-screen">
+    <main class="w-[300px] h-[260px] px-4 flex flex-col nunito-sans">
+      <!-- <div id="logoutview" class="flex flex-col justify-center h-screen">
         <h1 class="text-lg">Login to Repost Exchange</h1>
         <p>To use this extension, please log in to your Repost Exchange account.</p>
         <p>Once you are logged in, please refresh this page.</p>
       </div>
       <div id="loginview" class="flex flex-col justify-center h-screen">
-        <h1 class="text-lg">Welcome to AutoRE</h1>
-        <div class="flex flex-col">
-          <label for="follower-count">Follower Count:</label>
-          <input 
-            id="follower-count"
-            class="bg-white h-8 px-2 rounded-2xl"
-            type="number" 
-            placeholder="Enter follower count"
-            min="1"
-          >
+        <h1 class="text-[29px] mb-3 font-[500] text-center">Welcome to AutoRE</h1>
+        <div class="mb-1.5">
+          <div class="flex flex-col">
+            <label for="follower-count" class="text-[15px]">Follower Count:</label>
+            <input 
+              id="follower-count"
+              class="bg-white h-8 px-2 rounded-2xl
+              border-orange-400/50 border-2
+              focus:border-orange-500 focus:outline-none"
+              type="number" 
+              placeholder="Enter follower count"
+              min="1"
+            >
+          </div>
+          <div class="flex flex-col mb-3 mt-2">
+            <label for="repost-amount" class="text-[15px]">Remaining Reposts:</label>
+            <input 
+              id="repost-amount"
+              class="bg-white h-8 px-2 rounded-2xl
+              border-orange-400/50 border-2
+              focus:border-orange-500 focus:outline-none"
+              type="number" 
+              placeholder="Enter remaining reposts"
+              min="0"
+              max="10"
+            >
+          </div>
         </div>
-        <div class="flex flex-col">
-          <label for="repost-amount">Remaining Reposts:</label>
-          <input 
-            id="repost-amount"
-            class="bg-white h-8 px-2 rounded-2xl"
-            type="number" 
-            placeholder="Enter remaining reposts"
-            min="0"
-            max="10"
-          >
-        </div>
-        <p>Click here to start the extension</p>
         <button 
           disabled 
           id="start" 
           type="button" 
-          class="bg-blue-500 text-white px-4 py-2 rounded cursor-pointer 
+          class="bg-orange-500 text-white px-4 py-2 rounded-xl cursor-pointer text-[15px]
           disabled:cursor-not-allowed disabled:bg-gray-400"
         >
           Start
@@ -51,9 +59,10 @@
       <div id="fourofourview" class="flex flex-col justify-center h-screen">
         <h1 class="text-lg">This is not the Repost Exchange page.</h1>
         <p>Please navigate to the repost exchange page to get this to function.</p>
-      </div>
-      <div id="loadingview" class="flex flex-col justify-center items-center h-screen hidden">
-        <p id="splash-text"></p>
+      </div> -->
+      <div id="loadingview" class="flex flex-col justify-center items-center h-screen">
+        <p id="splash-text">0 out of 10 reposts successfully handled.</p>
+        <p class="text-center">Please do not navigate away from or reload the page.</p>
         <span class="loader"></span>
         <button 
           id="cancel" 
@@ -64,7 +73,7 @@
         </button>
       </div>
     </main>
-    <script src="scripts/prerun.js"></script>
-    <script src="scripts/run.js"></script>
+    <!-- <script src="scripts/prerun.js"></script>
+    <script src="scripts/run.js"></script> -->
   </body>
 </html>

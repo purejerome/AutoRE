@@ -77,7 +77,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     } else if (request.action === 'closeLoading') {
         turnOffLoadingView();
     }
-    return true;
+    return;
 });
 
 function turnOnLoadingView(){

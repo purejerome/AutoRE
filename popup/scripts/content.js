@@ -278,7 +278,11 @@ async function handleRunThrough(isCampaign = true, reposts, repostValue){
                             return null;
                         }
                         if(isCampaign){
-                            return Array.from(mSections).slice(0, reaminingReposts);
+                            if(currentPage == 1){
+                                return Array.from(mSections).slice(0, reaminingReposts);
+                            }else{
+                                return Array.from(mSections).slice(1, reaminingReposts + 1);
+                            }
                         }else{
                             return Array.from(mSections);
                         }
@@ -288,7 +292,7 @@ async function handleRunThrough(isCampaign = true, reposts, repostValue){
         }
         
         ({reaminingReposts, errorCounts, totalReposts} = await runThroughSongs(musicSections, reaminingReposts, errorCounts, 
-            repostValue, totalReposts, isCampaign, startingReposts));
+            repostValue, totalReposts, isCampaign, reposts));
         console.log("reaminingReposts: ", reaminingReposts);
         console.log("errorCounts: ", errorCounts);
         if(isCampaign && reaminingReposts > 0 && errorCounts < 6){
@@ -348,65 +352,63 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "startclicker") {
         console.log("startclicker action received");
         chrome.runtime.sendMessage({action: "start", total: message.reposts});
-        // chrome.runtime.sendMessage({action: "running"});
-        (async () => {
-        for (let i = 0; i < 10; i++) {
-            await countUpTest(message.reposts);
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            count++;
-        }
-        for (let i = 0; i < 10; i++) {
-            await countUpTestRequests(10);
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-            requestCount++;
-        }
-        chrome.runtime.sendMessage({action: "finish"});
-        sendResponse({ outcome: 'success' });   // delivered!
-        })();
+        chrome.runtime.sendMessage({action: "running"});
         // (async () => {
-        //     const respostValue = message.respostValue;
-        //     const reposts = message.reposts;
-        //     const location = window.location.href;
-        //     const campaigns = document.querySelector('a[href="/browse/campaigns/recommended"]')
-        //     if(!location.includes("/browse/campaigns/recommended")){
-        //         if(campaigns){
-        //             campaigns.click()
-        //         }else{
-        //             chrome.runtime.sendMessage({action: "finish"});
-        //             sendResponse({ outcome: "error", message: "Campaigns link not found" })
-        //             return
-        //         }
-        //     }
-        //     chrome.runtime.sendMessage({action: "start", total: reposts});
-        //     chrome.runtime.sendMessage({action: "running"});
-        //     const outcomeCampaign = await handleRunThrough(true, reposts, respostValue);
-        //     if(outcomeCampaign == "bad"){
-        //         chrome.runtime.sendMessage({action: "finish"});
-        //         sendResponse({ outcome: "error", message: "Error in main run through" })
-        //         return
-        //     }
-        //     const request = document.querySelector('a[href="/me/repost-requests/requested"]')
-        //     const spans = request.querySelectorAll("span");
-        //     if(spans.length <= 1){
-        //         console.log("no reposts")
-        //     }else{
-        //         request.click();
-        //         await new Promise((resolve) => setTimeout(resolve, 2000));
-        //         console.log("spans: ", spans);
-        //         console.log("innnnnnn")
-        //         const repostsRequests = parseInt(spans[1].innerText);
-        //         chrome.runtime.sendMessage({action: "startRequests", totalRequests: repostsRequests});
-        //         const requestOutcome = await handleRunThrough(false, repostsRequests, respostValue);
-        //         if(requestOutcome == "bad"){
-        //             chrome.runtime.sendMessage({action: "finish"});
-        //             sendResponse({ outcome: "error", message: "Error in repost run through" })
-        //             return
-        //         }
-        //     }
-        //     chrome.runtime.sendMessage({action: "finish"});
-        //     sendResponse({ outcome: "success" });
-        //     return
+        // for (let i = 0; i < 10; i++) {
+        //     await countUpTest(message.reposts);
+        //     await new Promise((resolve) => setTimeout(resolve, 1000));
+        //     count++;
+        // }
+        // for (let i = 0; i < 10; i++) {
+        //     await countUpTestRequests(10);
+        //     await new Promise((resolve) => setTimeout(resolve, 1000));
+        //     requestCount++;
+        // }
+        // chrome.runtime.sendMessage({action: "finish"});
+        // sendResponse({ outcome: 'success' });   // delivered!
         // })();
+        (async () => {
+            const respostValue = message.respostValue;
+            const reposts = message.reposts;
+            const location = window.location.href;
+            const campaigns = document.querySelector('a[href="/browse/campaigns/recommended"]')
+            if(!location.includes("/browse/campaigns/recommended")){
+                if(campaigns){
+                    campaigns.click()
+                }else{
+                    chrome.runtime.sendMessage({action: "finish"});
+                    sendResponse({ outcome: "error", message: "Campaigns link not found" })
+                    return
+                }
+            }
+            const outcomeCampaign = await handleRunThrough(true, reposts, respostValue);
+            if(outcomeCampaign == "bad"){
+                chrome.runtime.sendMessage({action: "finish"});
+                sendResponse({ outcome: "error", message: "Error in main run through" })
+                return
+            }
+            const request = document.querySelector('a[href="/me/repost-requests/requested"]')
+            const spans = request.querySelectorAll("span");
+            if(spans.length <= 1){
+                console.log("no reposts")
+            }else{
+                request.click();
+                await new Promise((resolve) => setTimeout(resolve, 2000));
+                console.log("spans: ", spans);
+                console.log("innnnnnn")
+                const repostsRequests = parseInt(spans[1].innerText);
+                chrome.runtime.sendMessage({action: "startRequests", totalRequests: repostsRequests});
+                const requestOutcome = await handleRunThrough(false, repostsRequests, respostValue);
+                if(requestOutcome == "bad"){
+                    chrome.runtime.sendMessage({action: "finish"});
+                    sendResponse({ outcome: "error", message: "Error in repost run through" })
+                    return
+                }
+            }
+            chrome.runtime.sendMessage({action: "finish"});
+            sendResponse({ outcome: "success" });
+            return
+        })();
         return true;
     }
 });

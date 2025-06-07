@@ -12,7 +12,7 @@
   </head>
   <body>
     <main class="w-[300px] h-[260px] px-4 flex flex-col nunito-sans">
-      <!-- <div id="logoutview" class="flex flex-col justify-center h-screen">
+      <div id="logoutview" class="flex flex-col justify-center h-screen">
         <h1 class="text-lg">Login to Repost Exchange</h1>
         <p>To use this extension, please log in to your Repost Exchange account.</p>
         <p>Once you are logged in, please refresh this page.</p>
@@ -59,21 +59,21 @@
       <div id="fourofourview" class="flex flex-col justify-center h-screen">
         <h1 class="text-lg">This is not the Repost Exchange page.</h1>
         <p>Please navigate to the repost exchange page to get this to function.</p>
-      </div> -->
-      <div id="loadingview" class="flex flex-col justify-center items-center h-screen">
-        <p id="splash-text">0 out of 10 reposts successfully handled.</p>
-        <p class="text-center">Please do not navigate away from or reload the page.</p>
-        <span class="loader"></span>
+      </div>
+      <div id="loadingview" class="flex flex-col justify-center items-center h-screen hidden">
+        <p id="splash-text" class="mb-4 text-[13px] text-center">0 out of 10 reposts successfully handled.</p>
+        <p class="text-center mb-6">Please do not navigate away from or reload the page.</p>
+        <span class="loader mb-5"></span>
         <button 
           id="cancel" 
           type="button" 
-          class="bg-red-500 text-white px-4 py-2 rounded cursor-pointer mt-4"
+          class="bg-red-500 text-white px-4 py-2 rounded cursor-pointer mt-4 w-full"
         >
         Cancel
         </button>
       </div>
     </main>
-    <!-- <script src="scripts/prerun.js"></script>
-    <script src="scripts/run.js"></script> -->
+    <script src="scripts/prerun.js"></script>
+    <script src="scripts/run.js"></script>
   </body>
 </html>

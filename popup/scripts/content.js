@@ -341,6 +341,40 @@ function countUpTestRequests(){
     chrome.runtime.sendMessage({action: "updateSplashText", text: splashText});
 }
 
+function createToast(title, message, isSuccess) {
+    const toast = document.createElement("div");
+    const toastBody = document.createElement("div");
+    const toastTitle = document.createElement("strong");
+    const toastMessage = document.createElement("p");
+    const toastImage = document.createElement("img");
+    
+    toastImage.src = chrome.runtime.getURL("images/AutoRELogo.png");
+    toastImage.alt = "AutoRE Logo";
+    toast.className = "AutoREToast";
+    if (isSuccess) {
+        toast.classList.add("success");
+    }else{
+        toast.classList.add("error");
+    }
+    toastTitle.innerText = title;
+    toastMessage.innerText = message;
+    toastBody.appendChild(toastTitle);
+    toastBody.appendChild(toastMessage);
+    toast.appendChild(toastImage);
+    toast.appendChild(toastBody);
+    
+    document.body.appendChild(toast);
+    setTimeout(() => {
+        toast.classList.add('show');
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => {
+                document.body.removeChild(toast);
+            }, 500);
+        }, 5000);
+    }, 500);
+}
+
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if(message.ping === true){
@@ -350,23 +384,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         return;
     }
     if (message.action === "startclicker") {
-        console.log("startclicker action received");
         chrome.runtime.sendMessage({action: "start", total: message.reposts});
         chrome.runtime.sendMessage({action: "running"});
-        // (async () => {
-        // for (let i = 0; i < 10; i++) {
-        //     await countUpTest(message.reposts);
-        //     await new Promise((resolve) => setTimeout(resolve, 1000));
-        //     count++;
-        // }
-        // for (let i = 0; i < 10; i++) {
-        //     await countUpTestRequests(10);
-        //     await new Promise((resolve) => setTimeout(resolve, 1000));
-        //     requestCount++;
-        // }
-        // chrome.runtime.sendMessage({action: "finish"});
-        // sendResponse({ outcome: 'success' });   // delivered!
-        // })();
         (async () => {
             const respostValue = message.respostValue;
             const reposts = message.reposts;
@@ -376,6 +395,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 if(campaigns){
                     campaigns.click()
                 }else{
+                    createToast("Error", "Could not find campaign button.", false);
                     chrome.runtime.sendMessage({action: "finish"});
                     sendResponse({ outcome: "error", message: "Campaigns link not found" })
                     return
@@ -384,27 +404,26 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             const outcomeCampaign = await handleRunThrough(true, reposts, respostValue);
             if(outcomeCampaign == "bad"){
                 chrome.runtime.sendMessage({action: "finish"});
+                createToast("Error", "There were many errors when reposting tracks.", false);
                 sendResponse({ outcome: "error", message: "Error in main run through" })
                 return
             }
             const request = document.querySelector('a[href="/me/repost-requests/requested"]')
             const spans = request.querySelectorAll("span");
-            if(spans.length <= 1){
-                console.log("no reposts")
-            }else{
+            if(spans.length > 1){
                 request.click();
                 await new Promise((resolve) => setTimeout(resolve, 2000));
-                console.log("spans: ", spans);
-                console.log("innnnnnn")
                 const repostsRequests = parseInt(spans[1].innerText);
                 chrome.runtime.sendMessage({action: "startRequests", totalRequests: repostsRequests});
                 const requestOutcome = await handleRunThrough(false, repostsRequests, respostValue);
                 if(requestOutcome == "bad"){
                     chrome.runtime.sendMessage({action: "finish"});
+                    createToast("Error", "There were many errors when reposting tracks.", false);
                     sendResponse({ outcome: "error", message: "Error in repost run through" })
                     return
                 }
             }
+            createToast("Success", "Reposting ending successfully(or mostly at least).", true);
             chrome.runtime.sendMessage({action: "finish"});
             sendResponse({ outcome: "success" });
             return

@@ -68,6 +68,10 @@ start_button.addEventListener('click',  async () => {
         target: { tabId: tab.id },
         files: ['popup/css/color_fades.css'],
     });
+    await chrome.scripting.insertCSS({
+        target: { tabId: tab.id },
+        files: ['popup/css/toast.css'],
+    });
     await chrome.scripting.executeScript({
         target: { tabId: tab.id },
         files: ['popup/scripts/content.js'],
@@ -83,14 +87,14 @@ start_button.addEventListener('click',  async () => {
             type: 'basic',
             iconUrl: '/images/AutoRELogo.png',
             title: 'Success',
-            message: 'Reposting tracks started successfully.',
+            message: 'Reposting ending successfully(or mostly at least).',
         });
     }else{
         chrome.notifications.create({
             type: 'basic',
             iconUrl: '/images/AutoRELogo.png',
             title: 'Error',
-            message: 'There was an error in reposting tracks.',
+            message: 'There were many errors when reposting tracks.',
         });
     }
   }catch{

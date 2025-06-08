@@ -4,11 +4,17 @@
   "version": "1.0",
   "manifest_version": 3,
   "background": {
-    "service_worker": "/popup/scripts/background.js"
+    "service_worker": "popup/scripts/background.js"
   },
   "action": {
-    "default_popup": "/popup/main.html",
-    "default_icon": "/images/AutoRELogo.png"
+    "default_popup": "popup/main.html",
+    "default_icon": "images/AutoRELogo.png"
   },
-  "permissions": ["activeTab", "tabs", "scripting", "notifications", "alarms"]
+  "permissions": ["activeTab", "tabs", "scripting", "notifications", "alarms"],
+  "web_accessible_resources": [
+    {
+      "resources": ["images/AutoRELogo.png"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }

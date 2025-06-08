@@ -1,0 +1,45 @@
+.AutoREToast {
+  position: fixed;
+  width: 400px;
+  height: 100px;
+  display: flex;
+  border-left: 5px solid;
+  bottom: 20px;
+  left: 20px;
+  background-color: white;
+  z-index: 9999;
+  
+  transform: translateX(-120%);
+  opacity: 0;
+  transition: transform 0.5s ease, opacity 0.5s ease;
+}
+
+.AutoREToast.show {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+.AutoREToast.hide {
+  transform: translateX(-120%);
+  opacity: 0;
+}
+
+.AutoREToast.success {
+  border-color: #FF6900;
+}
+
+.AutoREToast.error {
+  border-color: #ff1900;
+}
+
+.AutoREToast div{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    margin-left: 20px;
+    padding-top: 10px;
+}
+
+.AutoREToast strong{
+    font-size: 20px;
+}

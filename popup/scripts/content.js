@@ -314,8 +314,6 @@ async function handleRunThrough(isCampaign = true, reposts, repostValue){
     }
     return "good";
 }
-let count = 0
-let requestCount = 0;
 
 function updateSplashText(count, totalReposts){
     const splashText = `${count} out of ${totalReposts} reposts successfully handled.`;
@@ -325,18 +323,6 @@ function updateSplashText(count, totalReposts){
 
 function updateSplashTextRequests(requestCount, totalRepostsRequests){
     const splashText = `${requestCount} out of ${totalRepostsRequests} requests successfully handled.`;
-    chrome.runtime.sendMessage({action: "progressRequests", doneRequests: requestCount});
-    chrome.runtime.sendMessage({action: "updateSplashText", text: splashText});
-}
-
-function countUpTest(){
-    const splashText = `${count} out of 10 reposts successfully handled.`;
-    chrome.runtime.sendMessage({action: "progress", done: count});
-    chrome.runtime.sendMessage({action: "updateSplashText", text: splashText});
-}
-
-function countUpTestRequests(){
-    const splashText = `${requestCount} out of 10 requests successfully handled.`;
     chrome.runtime.sendMessage({action: "progressRequests", doneRequests: requestCount});
     chrome.runtime.sendMessage({action: "updateSplashText", text: splashText});
 }

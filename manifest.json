@@ -10,5 +10,5 @@
     "default_popup": "/popup/main.html",
     "default_icon": "/images/AutoRELogo.png"
   },
-  "permissions": ["activeTab", "tabs", "scripting"]
+  "permissions": ["activeTab", "tabs", "scripting", "notifications", "alarms"]
 }

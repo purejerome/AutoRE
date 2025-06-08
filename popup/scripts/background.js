@@ -37,3 +37,16 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     return;
   }
 });
+
+
+// chrome.alarms.onAlarm.addListener((alarm) => {
+//     console.log("good")
+//     if(alarm.name == "repostAlarm"){
+//         chrome.notifications.create({
+//             title: 'Repost Alarm',
+//             message: 'You are now able to start reposting!',
+//             iconUrl: '/images/AutoRELogo.png',
+//             type: 'basic'
+//         });
+//     }
+// });

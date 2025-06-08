@@ -33,6 +33,14 @@ followInput.addEventListener("input", toggleButtonState);
 repostInput.addEventListener("input", toggleButtonState);
 
 const injected = new Set();
+// start_button.addEventListener('click', async () => {
+//     chrome.notifications.create({
+//         type: 'basic',
+//         iconUrl: '/images/AutoRELogo.png',
+//         title: 'Error',
+//         message: 'There was an error in reposting tracks.',
+//     });
+// })
 
 start_button.addEventListener('click',  async () => {
   const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -70,6 +78,21 @@ start_button.addEventListener('click',  async () => {
   try{
     const runResponse = await chrome.tabs.sendMessage(tab.id, { action: 'startclicker', respostValue: respostValueFromFollowers, reposts: repostsRemaining });
     console.log("Run response:", runResponse);
+    if (runResponse && runResponse.error) {
+        chrome.notifications.create({
+            type: 'basic',
+            iconUrl: '/images/AutoRELogo.png',
+            title: 'Success',
+            message: 'Reposting tracks started successfully.',
+        });
+    }else{
+        chrome.notifications.create({
+            type: 'basic',
+            iconUrl: '/images/AutoRELogo.png',
+            title: 'Error',
+            message: 'There was an error in reposting tracks.',
+        });
+    }
   }catch{
     console.error("Error sending startclicker message:", chrome.runtime.lastError);
   }

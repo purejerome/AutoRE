@@ -27,6 +27,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 async function handleTab(tab){
     const { running, done, total, 
         doneRequests, totalRequests } = await chrome.runtime.sendMessage({ action: "getState" });
+    console.log("Current state:", { running, done, total, doneRequests, totalRequests });
     if(running){
         loginview.classList.add("hidden");
         logoutview.classList.add("hidden");

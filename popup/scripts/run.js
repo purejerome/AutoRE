@@ -104,7 +104,7 @@ start_button.addEventListener('click',  async () => {
 
 cancel_button.addEventListener('click', async () => {
     chrome.tabs.reload(tabID, { bypassCache: true });
-    await chrome.tabs.sendMessage({ action: 'finish' });
+    await chrome.runtime.sendMessage({ action: 'finish' });
 });
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
@@ -125,6 +125,13 @@ function turnOffLoadingView(){
     loadingview.classList.add("hidden");
     loginviewRun.classList.remove("hidden");
 }
+
+// chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+//     if (changeInfo.status === 'loading' && tabId === tabID) {
+//         console.log(`Tab ${tabId} is reloading...`);
+//         chrome.runtime.sendMessage({ action: 'finish' });
+//     }
+// });
 
 
 // loadingview.classList.remove("hidden");

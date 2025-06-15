@@ -19,9 +19,14 @@ function checkAmount(button, repostValue){
     return amount.includes(`${repostValue}`)
 }
 
-async function playSong(soundCloudWidget, timeout = 1000) {
-    soundCloudWidget.play()
-    soundCloudWidget.pause()
+async function playSong(soundCloudWidget, seekTo = 1000) {
+    console.log("Playing song...");
+    soundCloudWidget.seekTo(seekTo)
+    // const pauseButton = await objectFinder(() => {
+    //     let pause = document.querySelector("img[alt='Pause']");
+    //     return pause;
+    // }, 500);
+    // pauseButton.click();
 }
 
 function waitForWidgetReady(iframe, timeout = 10000) {
@@ -29,23 +34,36 @@ function waitForWidgetReady(iframe, timeout = 10000) {
     if (!iframe) return reject(new Error("iframe is null"));
 
     let widget = SC.Widget(iframe);
-    if (widget != null) {
-        resolve(widget);
-    }
-
+    if (widget != null) { resolve(widget); }
+    
     const timer = setTimeout(() => reject(new Error("READY timeout")), timeout);
-    const onReady = () => {
-      clearTimeout(timer);
-      resolve(widget);
-    };
     while(widget == null){
         widget = SC.Widget(iframe);
-        if(widget != null){
+        if(widget != null && iframe.contentWindow){
             onReady();
         }
     }
+
+    const onReady = () => {
+        console.log(iframe)
+        clearTimeout(timer);
+        resolve(widget);
+    };
+    
+    console.log("Waiting for SoundCloud widget to be ready...");
+    // widget.bind(SC.Widget.Events.READY, function() {
+    //     console.log('SoundCloud widget is ready!');
+    //     onReady();
+    // });
+    // while(widget == null){
+    //     widget = SC.Widget(iframe);
+        // if(widget != null && iframe.contentWindow){
+        //     onReady();
+        // }
+    // }
   });
 }
+
 
 function setColor(element, color, pending){
     if(pending){
@@ -135,9 +153,37 @@ async function modalWalkThrough(modal){
             const close_button = new_modal.querySelector("button");
             close_button.click();
             old_modal = new_modal;
+        }else{
+            console.log("NO THIRD")
         }
         count++;
     }
+    
+    let modalCheck =  await objectFinder(() => {
+        let new_modal = document.querySelector(".modal-content");
+        if(new_modal == null || new_modal == old_modal){
+            return null;
+        }
+        return new_modal;
+    }, 100);
+    
+    while(modalCheck != null){
+        modalCheck =  await objectFinder(() => {
+            let new_modal = document.querySelector(".modal-content");
+            if(new_modal == null || new_modal == old_modal){
+                return null;
+            }
+            return new_modal;
+        }, 100);
+    }
+    console.log("modal walkthrough done");
+    
+    let pauseButton = null;
+    pauseButton = await objectFinder(() => {
+        let pause = document.querySelector("img[alt='Pause']");
+        return pause;
+    }, 500);
+    pauseButton.click();
 }
 
 async function runThroughSongs(musicSections, reaminingReposts, 
@@ -163,18 +209,30 @@ async function runThroughSongs(musicSections, reaminingReposts,
             })
             try{
                 var soundCloudWidget = await waitForWidgetReady(frame)
-                frame.click()
-                frame.click()
-                frame.click()
-                for(let j = 0; j < 3; j++){
-                    await playSong(soundCloudWidget);
+                let seekTo = 1000;
+                console.log("waiting before clicking")
+                await new Promise((resolve) => setTimeout(resolve, 3000));
+                console.log("clicking")
+                await playSong(soundCloudWidget, seekTo);
+                let pauseButtonCheck = null;
+                let pauseButtonCheckCount = 0
+                // for(let j = 0; j < 3; j++){
+                //     await playSong(soundCloudWidget);
+                // }
+                // let pauseButton = null;
+                while( pauseButtonCheckCount < 3){
+                    pauseButtonCheck = await objectFinder(() => {
+                        let pause = document.querySelector("img[alt='Pause']");
+                        return pause;
+                    }, 200);
+                    if(pauseButtonCheck != null){
+                        break;
+                    }
+                    seekTo += 1000;
+                    pauseButtonCheckCount++;
+                    await playSong(soundCloudWidget, seekTo);
                 }
-                const pauseButton = await objectFinder(() => {
-                    let pause = document.querySelector("img[alt='Pause']");
-                    return pause;
-                }, 500);
                 await new Promise((resolve) => setTimeout(resolve, 7000));
-                pauseButton.click();
                 const button = musicSections[i].querySelector("button");
                 if(button.disabled){
                     setColor(musicSections[i], 'red', false);
@@ -183,6 +241,7 @@ async function runThroughSongs(musicSections, reaminingReposts,
                     continue;
                 }
                 button.click();
+                await new Promise((resolve) => setTimeout(resolve, 100));
                 
                 const popup_modal = await objectFinder(() => {
                     let pop = document.querySelector(".modal-content");
@@ -209,11 +268,11 @@ async function runThroughSongs(musicSections, reaminingReposts,
                     reaminingReposts = 0;
                     errorCounts = 6;
                     continue;
-                }
-                
+                }  
                 setColor(musicSections[i], 'green', false);
                 reaminingReposts--;
                 totalReposts++;
+                await new Promise((resolve) => setTimeout(resolve, 200));
                 if(isCampaign){
                     updateSplashText(totalReposts, startingReposts);
                 }else{
@@ -221,6 +280,7 @@ async function runThroughSongs(musicSections, reaminingReposts,
                 }
             }catch(e){
                 console.log("no frame?")
+                console.error("Error playing song:", e);
                 setColor(musicSections[i], 'red', false);
                 errorCounts++;
             }
@@ -256,6 +316,7 @@ async function findNextButton(currentPage){
     return nextButton;
 }
 
+
 async function handleRunThrough(isCampaign = true, reposts, repostValue){
     let reaminingReposts = reposts;
     let currentPage = 1;
@@ -263,7 +324,8 @@ async function handleRunThrough(isCampaign = true, reposts, repostValue){
     let totalReposts = 0;
     
     console.log("in")
-    while(reaminingReposts > 0 && errorCounts < 6){
+    while(reaminingReposts > 0){
+        console.log("in")
         let nextButton = null;
         
         if(isCampaign){
@@ -295,6 +357,11 @@ async function handleRunThrough(isCampaign = true, reposts, repostValue){
             repostValue, totalReposts, isCampaign, reposts));
         console.log("reaminingReposts: ", reaminingReposts);
         console.log("errorCounts: ", errorCounts);
+        if(errorCounts >= 6){
+            console.log("error counts reached 6, breaking");
+            return "bad";
+        }
+        
         if(isCampaign && reaminingReposts > 0 && errorCounts < 6){
             console.log("going next page")
             currentPage++;
@@ -389,6 +456,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             }
             const outcomeCampaign = await handleRunThrough(true, reposts, respostValue);
             if(outcomeCampaign == "bad"){
+                console.log("bad outcome in campaign run through")
                 chrome.runtime.sendMessage({action: "finish"});
                 createToast("Error", "There were many errors when reposting tracks.", false);
                 sendResponse({ outcome: "error", message: "Error in main run through" })

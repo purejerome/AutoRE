@@ -145,6 +145,7 @@ async function modalWalkThrough(modal){
             return new_modal;
         }, 500);
         if(new_modal == null && count < 2){
+            console.log("count: ", count);
             console.log("no new modal found");
             return "bad";
         }
@@ -292,17 +293,29 @@ async function runThroughSongs(musicSections, reaminingReposts,
 async function findNextButton(currentPage){
     let nextButton = null;
     const pagination = await objectFinder(() => {
-        let pag = document.querySelector(".pagination");
+        let pag = document.querySelector("nav[data-scope='pagination']");
         return pag;
     }, 500);
     
-    const pageButtons = pagination.querySelectorAll(".page-item .page-link");
+    const pageButtons = await objectFinder(() => {
+        let pagButtons = pagination.querySelectorAll("button[data-part='item']");
+        if(pagButtons.length <= 0){
+            return null;
+        }
+        return pagButtons;
+    }, 500);
+    
     const pageButtonsArray = Array.from(pageButtons);
     
     if(currentPage == 1){
-        const activePage = pagination.querySelector(".page-item.active .page-link");
+        const activePage = await objectFinder(() => {
+            let aPage = pagination.querySelector("button[data-part='item'][data-selected][aria-current='page']");
+            return aPage;
+        }, 200);
+        console.log("activePage: ", activePage);
+        console.log("activePage.innerText: ", activePage.innerText);
         if(activePage.innerText != "1"){
-            pageButtonsArray[1].click();
+            pageButtonsArray[0].click();
             await new Promise((resolve) => setTimeout(resolve, 2000));
         }
     }

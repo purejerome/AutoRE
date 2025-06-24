@@ -2,9 +2,9 @@
 async function objectFinder(findingFunction, timeout = 1000) {
     let objects = null;
     let find_attempts = 0;
-    while(objects == null && find_attempts < 10){
+    while((objects == null || objects == undefined) && find_attempts < 10){
         objects = findingFunction();
-        if(objects == null){
+        if((objects == null || objects == undefined)){
             find_attempts++;
             await new Promise((resolve) => setTimeout(resolve, timeout));
         }else{

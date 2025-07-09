@@ -100,13 +100,11 @@ async function modalWalkThrough(modal){
         return "bad";
     }
     for(let i = 0; i < inputs.length; i++){
-        if(i < inputs.length - 1){
-            if(inputs[i].type == "checkbox" && inputs[i].checked && !inputs[i].disabled){
-                inputs[i].click();
-            }
-        }else{
-            const parent = inputs[i].parentElement.parentElement.parentElement;
-            const plus_one_container = parent.querySelector(".col-4");
+        const parent = inputs[i].parentElement;
+        if(parent.innerText.includes("Like the track")){
+            console.log("inside like the track")
+            const plus_one_container = parent.parentElement.parentElement.querySelector(".col-4");
+            console.log("plus_one_container: ", plus_one_container);
             if(plus_one_container == null){
                 inputs[i].click();
             }else{
@@ -114,8 +112,26 @@ async function modalWalkThrough(modal){
                     inputs[i].click();
                 }
             }
-            
         }
+        else if(inputs[i].type == "checkbox" && inputs[i].checked && !inputs[i].disabled){
+            inputs[i].click();
+        }
+        // if(i < inputs.length - 1){
+        //     if(inputs[i].type == "checkbox" && inputs[i].checked && !inputs[i].disabled){
+        //         inputs[i].click();
+        //     }
+        // }else{
+        //     const parent = inputs[i].parentElement.parentElement.parentElement;
+        //     const plus_one_container = parent.querySelector(".col-4");
+            // if(plus_one_container == null){
+            //     inputs[i].click();
+            // }else{
+            //     if(!plus_one_container.innerText.includes("1")){
+            //         inputs[i].click();
+            //     }
+            // }
+            
+        // }
     }
     buttons[1].click();
     count = 0;
@@ -144,18 +160,14 @@ async function modalWalkThrough(modal){
             }
             return new_modal;
         }, 500);
-        if(new_modal == null && count < 2){
-            console.log("count: ", count);
-            console.log("no new modal found");
-            return "bad";
-        }
         
         if(new_modal != null){
             const close_button = new_modal.querySelector("button");
             close_button.click();
             old_modal = new_modal;
         }else{
-            console.log("NO THIRD")
+            console.log("NO SECOND OR THIRD");
+            break;
         }
         count++;
     }
@@ -167,15 +179,21 @@ async function modalWalkThrough(modal){
         }
         return new_modal;
     }, 100);
+    let checkCount = 0;
     
-    while(modalCheck != null){
-        modalCheck =  await objectFinder(() => {
+    while(modalCheck != null && checkCount < 2){
+        modalCheck = await objectFinder(() => {
             let new_modal = document.querySelector(".modal-content");
             if(new_modal == null || new_modal == old_modal){
                 return null;
             }
             return new_modal;
         }, 100);
+        checkCount++;
+    }
+    
+    if(modalCheck != null){
+        return "bad";
     }
     console.log("modal walkthrough done");
     
@@ -345,10 +363,11 @@ async function handleRunThrough(isCampaign = true, reposts, repostValue){
             nextButton = await findNextButton(currentPage);
         }
         
+        const music_string = isCampaign ? ".ob-campaigns-campaigncard" : 'div.pd-jsxFDi[class="pd-jsxFDi"]';
         
         
         const musicSections = await objectFinder(() => {
-                        let mSections = document.querySelectorAll(".pd-jsxFDi");
+                        let mSections = document.querySelectorAll(music_string);
                         if(mSections.length <= 0){
                             return null;
                         }
@@ -362,9 +381,12 @@ async function handleRunThrough(isCampaign = true, reposts, repostValue){
                             return Array.from(mSections);
                         }
                     });
+        console.log("musicSections: ", musicSections);
         if(musicSections == null){
             return "bad";
         }
+        
+        
         
         ({reaminingReposts, errorCounts, totalReposts} = await runThroughSongs(musicSections, reaminingReposts, errorCounts, 
             repostValue, totalReposts, isCampaign, reposts));

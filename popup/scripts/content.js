@@ -210,7 +210,8 @@ async function runThroughSongs(musicSections, reaminingReposts,
     let valueError = 0;
     for(let i = 0; i < musicSections.length && errorCounts < 6; i++){
             setColor(musicSections[i], 'orange', true);
-            if(!checkAmount(musicSections[i].querySelector("button"), repostValue)){
+            console.log(musicSections[i].querySelector('button[data-scope="tooltip"]'))
+            if(!checkAmount(musicSections[i].querySelector('button[data-scope="tooltip"]'), repostValue)){
                 musicSections[i].style.removeProperty('background-color');
                 musicSections[i].classList.remove("pluse-bg");
                 musicSections[i].style.setProperty('background-color', 'gray', 'important');
@@ -220,6 +221,7 @@ async function runThroughSongs(musicSections, reaminingReposts,
                 }
                 continue;
             }
+            console.log("continueing");
             const bounds = musicSections[i].getBoundingClientRect()
             window.scrollTo(0, bounds.top + window.scrollY - 100);
             const frame = await objectFinder(() => {
@@ -252,7 +254,7 @@ async function runThroughSongs(musicSections, reaminingReposts,
                     await playSong(soundCloudWidget, seekTo);
                 }
                 await new Promise((resolve) => setTimeout(resolve, 7000));
-                const button = musicSections[i].querySelector("button");
+                const button = musicSections[i].querySelector('button[data-scope="tooltip"]');
                 if(button.disabled){
                     setColor(musicSections[i], 'red', false);
                     console.log("button disabled")
@@ -363,8 +365,8 @@ async function handleRunThrough(isCampaign = true, reposts, repostValue){
             nextButton = await findNextButton(currentPage);
         }
         
-        const music_string = isCampaign ? ".ob-campaigns-campaigncard" : 'div.pd-jsxFDi[class="pd-jsxFDi"]';
-        
+        // const music_string = isCampaign ? ".ob-campaigns-campaigncard" : 'div[class="pd-jsxFDi pd-hYZFkb"]';
+        const music_string = 'div[class="pd-fPSBzf pd-cMGtQw"]'
         
         const musicSections = await objectFinder(() => {
                         let mSections = document.querySelectorAll(music_string);
@@ -475,34 +477,63 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
         chrome.runtime.sendMessage({action: "start", total: message.reposts});
         chrome.runtime.sendMessage({action: "running"});
         (async () => {
+            const engage = document.querySelector('a[href="/engage"]')
+            console.log("engage: ", engage);
             const respostValue = message.respostValue;
             const reposts = message.reposts;
             const location = window.location.href;
-            const campaigns = document.querySelector('a[href="/browse/campaigns/recommended"]')
-            if(!location.includes("/browse/campaigns/recommended")){
-                if(campaigns){
-                    campaigns.click()
-                }else{
-                    createToast("Error", "Could not find campaign button.", false);
+            if(reposts > 0){
+                if(!location.includes("/engage")){
+                    if(engage){
+                        engage.click()
+                    }else{
+                        createToast("Error", "Could not find enage button.", false);
+                        chrome.runtime.sendMessage({action: "finish"});
+                        sendResponse({ outcome: "error", message: "Engage link not found" })
+                        return
+                    }
+                }
+                
+                const repostTab = await objectFinder(() => {
+                    let rTab = document.querySelector('button[data-value="repost_campaigns"]');
+                    if(rTab == null){
+                        return null;
+                    }
+                    return rTab;
+                })
+                
+                repostTab.click();
+                await new Promise((resolve) => setTimeout(resolve, 1000));
+                
+                const outcomeCampaign = await handleRunThrough(true, reposts, respostValue);
+                if(outcomeCampaign == "bad"){
+                    console.log("bad outcome in campaign run through")
                     chrome.runtime.sendMessage({action: "finish"});
-                    sendResponse({ outcome: "error", message: "Campaigns link not found" })
+                    createToast("Error", "There were many errors when reposting tracks.", false);
+                    sendResponse({ outcome: "error", message: "Error in main run through" })
                     return
                 }
             }
-            const outcomeCampaign = await handleRunThrough(true, reposts, respostValue);
-            if(outcomeCampaign == "bad"){
-                console.log("bad outcome in campaign run through")
-                chrome.runtime.sendMessage({action: "finish"});
-                createToast("Error", "There were many errors when reposting tracks.", false);
-                sendResponse({ outcome: "error", message: "Error in main run through" })
-                return
-            }
-            const request = document.querySelector('a[href="/me/repost-requests/requested"]')
-            const spans = request.querySelectorAll("span");
-            if(spans.length > 1){
-                request.click();
+            // const request = document.querySelector('a[href="/me/repost-requests/requested"]')
+            // const requestText = request.innerText;
+            // const match = requestText.match(/^Requests (\d+)$/);
+            // const engage = document.querySelector('a[href="/engage"]')
+            const directRequestTab = await objectFinder(() => {
+                let rTab = document.querySelector('button[data-value="incoming_requests"]');
+                if(rTab == null){
+                    return null;
+                }
+                return rTab;
+            })
+            const directRequestTabText = directRequestTab.innerText.replace(/\s+/g, ' ').trim();
+            console.log("directRequestTabText: ", directRequestTabText);
+            const match = directRequestTabText.match(/Direct Requests (\d+)$/);
+            console.log("match: ", match);
+            if(match){
+                directRequestTab.click();
                 await new Promise((resolve) => setTimeout(resolve, 2000));
-                const repostsRequests = parseInt(spans[1].innerText);
+                console.log("Repost requests found: ", match[1]);
+                const repostsRequests = parseInt(match[1]);
                 chrome.runtime.sendMessage({action: "startRequests", totalRequests: repostsRequests});
                 const requestOutcome = await handleRunThrough(false, repostsRequests, respostValue);
                 if(requestOutcome == "bad"){

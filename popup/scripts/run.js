@@ -53,7 +53,7 @@ start_button.addEventListener('click',  async () => {
   
   splash_text.innerText = `0 out of ${repostsRemaining} reposts successfully handled.`;
   
-  const respostValueFromFollowers = Math.floor(followers / 100) + 1;
+  const respostValueFromFollowers = Math.floor(followers / 100) + 5;
   
   console.log("Sending message to tab: ", tab.id);
   try{

@@ -16,11 +16,14 @@ async function objectFinder(findingFunction, timeout = 1000) {
 
 function checkAmount(button, repostValue){
     const amount = button.innerText;
+    console.log("amount: ", amount);
+    console.log("includes: ", amount.includes(`${repostValue}`));
     return amount.includes(`${repostValue}`)
 }
 
 async function playSong(soundCloudWidget, seekTo = 1000) {
     console.log("Playing song...");
+    console.log("sc widget: ", soundCloudWidget);
     soundCloudWidget.seekTo(seekTo)
     // const pauseButton = await objectFinder(() => {
     //     let pause = document.querySelector("img[alt='Pause']");
@@ -208,10 +211,11 @@ async function modalWalkThrough(modal){
 async function runThroughSongs(musicSections, reaminingReposts, 
     errorCounts, repostValue, totalReposts, isCampaign = true, startingReposts){
     let valueError = 0;
+    let buttonSearchValue = isCampaign ? '.ob-campaigns-repost-button' : 'div[data-scope="tooltip"] button';
     for(let i = 0; i < musicSections.length && errorCounts < 6; i++){
             setColor(musicSections[i], 'orange', true);
-            console.log(musicSections[i].querySelector('button[data-scope="tooltip"]'))
-            if(!checkAmount(musicSections[i].querySelector('button[data-scope="tooltip"]'), repostValue)){
+            console.log(musicSections[i].querySelector(buttonSearchValue))
+            if(!checkAmount(musicSections[i].querySelector(buttonSearchValue), repostValue)){
                 musicSections[i].style.removeProperty('background-color');
                 musicSections[i].classList.remove("pluse-bg");
                 musicSections[i].style.setProperty('background-color', 'gray', 'important');
@@ -253,8 +257,8 @@ async function runThroughSongs(musicSections, reaminingReposts,
                     pauseButtonCheckCount++;
                     await playSong(soundCloudWidget, seekTo);
                 }
-                await new Promise((resolve) => setTimeout(resolve, 7000));
-                const button = musicSections[i].querySelector('button[data-scope="tooltip"]');
+                await new Promise((resolve) => setTimeout(resolve, 35000));
+                const button = musicSections[i].querySelector(buttonSearchValue);
                 if(button.disabled){
                     setColor(musicSections[i], 'red', false);
                     console.log("button disabled")
@@ -480,9 +484,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
             const engage = document.querySelector('a[href="/engage"]')
             console.log("engage: ", engage);
             const respostValue = message.respostValue;
+            console.log("respostValue: ", respostValue);
             const reposts = message.reposts;
             const location = window.location.href;
             if(reposts > 0){
+                console.log("inside");
                 if(!location.includes("/engage")){
                     if(engage){
                         engage.click()
@@ -535,7 +541,11 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 console.log("Repost requests found: ", match[1]);
                 const repostsRequests = parseInt(match[1]);
                 chrome.runtime.sendMessage({action: "startRequests", totalRequests: repostsRequests});
-                const requestOutcome = await handleRunThrough(false, repostsRequests, respostValue);
+                const secondRepostValue = respostValue - 4;
+                console.log("repostValue: ", respostValue);
+                console.log(message);
+                console.log("secondRepostValue: ", secondRepostValue);
+                const requestOutcome = await handleRunThrough(false, repostsRequests, secondRepostValue);
                 if(requestOutcome == "bad"){
                     chrome.runtime.sendMessage({action: "finish"});
                     createToast("Error", "There were many errors when reposting tracks.", false);

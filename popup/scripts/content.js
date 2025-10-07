@@ -541,11 +541,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                 console.log("Repost requests found: ", match[1]);
                 const repostsRequests = parseInt(match[1]);
                 chrome.runtime.sendMessage({action: "startRequests", totalRequests: repostsRequests});
-                const secondRepostValue = respostValue - 4;
-                console.log("repostValue: ", respostValue);
-                console.log(message);
-                console.log("secondRepostValue: ", secondRepostValue);
-                const requestOutcome = await handleRunThrough(false, repostsRequests, secondRepostValue);
+                const requestOutcome = await handleRunThrough(false, repostsRequests, respostValue);
                 if(requestOutcome == "bad"){
                     chrome.runtime.sendMessage({action: "finish"});
                     createToast("Error", "There were many errors when reposting tracks.", false);

@@ -14,6 +14,35 @@ async function objectFinder(findingFunction, timeout = 1000) {
     return objects;
 }
 
+function waitForElement(findingFunction, timeout = 10000) {
+    return new Promise((resolve, reject) => {
+        const existing = findingFunction();
+        if (existing) {
+            resolve(existing);
+            return;
+        }
+
+        const observer = new MutationObserver(() => {
+            const element = findingFunction();
+            if (element) {
+                observer.disconnect();
+                clearTimeout(timer);
+                resolve(element);
+            }
+        });
+
+        observer.observe(root, {
+            childList: true,
+            subtree: true
+        });
+
+        const timer = setTimeout(() => {
+            observer.disconnect();
+            reject(new Error("Element timeout: " + selector));
+        }, timeout);
+    });
+}
+
 function checkAmount(button, repostValue){
     const amount = button.innerText;
     console.log("amount: ", amount);
@@ -31,7 +60,12 @@ async function playSong(soundCloudWidget, seekTo = 1000) {
     // }, 500);
     // pauseButton.click();
 }
-
+// function waitForWidgetReady(iframe, timeout = 10000) {
+//   return new Promise((resolve) => {
+//     const widget = SC.Widget(iframe);
+//     widget.bind(SC.Widget.Events.READY, () => resolve(widget));
+//   });
+// }
 function waitForWidgetReady(iframe, timeout = 10000) {
   return new Promise((resolve, reject) => {
     if (!iframe) return reject(new Error("iframe is null"));
@@ -87,6 +121,9 @@ async function modalWalkThrough(modal){
         }
         return Array.from(buttonElements);
     }, 500);
+
+    await new Promise((resolve) => setTimeout(resolve, 6000));
+    
     if(buttons == null){
         console.log("no buttons found");
         return "bad";
@@ -106,12 +143,12 @@ async function modalWalkThrough(modal){
         const parent = inputs[i].parentElement;
         if(parent.innerText.includes("Like the track")){
             console.log("inside like the track")
-            const plus_one_container = parent.parentElement.parentElement.querySelector(".col-4");
-            console.log("plus_one_container: ", plus_one_container);
-            if(plus_one_container == null){
+            const plus_creds_container = parent.parentElement.parentElement.querySelector(".col-4");
+            console.log("plus_creds_container: ", plus_creds_container);
+            if(plus_creds_container == null){
                 inputs[i].click();
             }else{
-                if(!plus_one_container.innerText.includes("1")){
+                if(!plus_creds_container.innerText.includes("+")){
                     inputs[i].click();
                 }
             }
@@ -119,24 +156,10 @@ async function modalWalkThrough(modal){
         else if(inputs[i].type == "checkbox" && inputs[i].checked && !inputs[i].disabled){
             inputs[i].click();
         }
-        // if(i < inputs.length - 1){
-        //     if(inputs[i].type == "checkbox" && inputs[i].checked && !inputs[i].disabled){
-        //         inputs[i].click();
-        //     }
-        // }else{
-        //     const parent = inputs[i].parentElement.parentElement.parentElement;
-        //     const plus_one_container = parent.querySelector(".col-4");
-            // if(plus_one_container == null){
-            //     inputs[i].click();
-            // }else{
-            //     if(!plus_one_container.innerText.includes("1")){
-            //         inputs[i].click();
-            //     }
-            // }
-            
-        // }
+        await new Promise((resolve) => setTimeout(resolve, 800 + Math.random()*1200));
     }
     buttons[1].click();
+    await new Promise((resolve) => setTimeout(resolve, 800 + Math.random()*1200));
     count = 0;
     
     const error_toast = await objectFinder(() => {
@@ -167,6 +190,7 @@ async function modalWalkThrough(modal){
         if(new_modal != null){
             const close_button = new_modal.querySelector("button");
             close_button.click();
+            await new Promise((resolve) => setTimeout(resolve, 500));
             old_modal = new_modal;
         }else{
             console.log("NO SECOND OR THIRD");
@@ -200,12 +224,17 @@ async function modalWalkThrough(modal){
     }
     console.log("modal walkthrough done");
     
-    let pauseButton = null;
-    pauseButton = await objectFinder(() => {
-        let pause = document.querySelector("img[alt='Pause']");
-        return pause;
-    }, 500);
-    pauseButton.click();
+    // let pauseButton = null;
+    // pauseButton = await objectFinder(() => {
+    //     let pause = document.querySelector("img[alt='Pause']");
+    //     return pause;
+    // }, 500);
+    // pauseButton.click();
+}
+
+function isMyCampain(section){
+    const campainText = section.innerText;
+    return campainText.includes("My Campaign");
 }
 
 async function runThroughSongs(musicSections, reaminingReposts, 
@@ -214,7 +243,13 @@ async function runThroughSongs(musicSections, reaminingReposts,
     let buttonSearchValue = isCampaign ? '.ob-campaigns-repost-button' : 'div[data-scope="tooltip"] button';
     for(let i = 0; i < musicSections.length && errorCounts < 6; i++){
             setColor(musicSections[i], 'orange', true);
-            console.log(musicSections[i].querySelector(buttonSearchValue))
+
+            if(isMyCampain(musicSections[i])){
+                console.log("not my campaign, skipping");
+                setColor(musicSections[i], 'gray', false);
+                continue;
+            }
+            
             if(!checkAmount(musicSections[i].querySelector(buttonSearchValue), repostValue)){
                 musicSections[i].style.removeProperty('background-color');
                 musicSections[i].classList.remove("pluse-bg");
@@ -272,11 +307,11 @@ async function runThroughSongs(musicSections, reaminingReposts,
                     let pop = document.querySelector(".modal-content");
                     return pop;
                 });
+                // const popup_modal = await waitForElement(".modal-content");
                 
                 if(popup_modal == null){
                     console.log("no popup modal")
                     setColor(musicSections[i], 'red', false);
-                    console.log("no popup modal")
                     errorCounts++;
                     continue;
                 }

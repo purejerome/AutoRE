@@ -156,10 +156,10 @@ async function modalWalkThrough(modal){
         else if(inputs[i].type == "checkbox" && inputs[i].checked && !inputs[i].disabled){
             inputs[i].click();
         }
-        await new Promise((resolve) => setTimeout(resolve, 800 + Math.random()*1200));
+        //await new Promise((resolve) => setTimeout(resolve, 800 + Math.random()*1200));
     }
     buttons[1].click();
-    await new Promise((resolve) => setTimeout(resolve, 800 + Math.random()*1200));
+    //await new Promise((resolve) => setTimeout(resolve, 800 + Math.random()*1200));
     count = 0;
     
     const error_toast = await objectFinder(() => {
